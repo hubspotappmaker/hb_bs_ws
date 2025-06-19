@@ -80,84 +80,81 @@ export  class GoogleDriverApplicationService {
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
 
-        const existConnected = await this.appModel.findOne({
-            user: userId,
-            'credentials.hub_id': dto.hub_id,
-            isDeleted: false
-        });
+        const { email, hub_id, installed_date, token } = dto;
 
-        if (existConnected) {
-            throw new ConflictException("user has already connected!")
-        }
+        const user = await this.userModel.findOne({ email });
+        if (!user) throw new NotFoundException('User not found');
 
-        const platform = await this.platformModel.findOne({name: 'GoogleDrive'});
+        const platform = await this.platformModel.findOne({ name: 'google_drive' });
+        if (!platform) throw new NotFoundException('Platform google_drive not found');
 
-        if (!platform) {
-            throw new NotFoundException('GoogleDrive platform not found');
-        }
+        let app = await this.appModel.findOne({ user: user._id, platform: platform._id });
 
+        const credentials = {
+            hub_id,
+            email,
+            token: {...token, token_type: 'google_access_token',installed_date},
+        };
 
-            const createdApp = new this.appModel({
+        if (!app) {
+            app = await this.appModel.create({
+                user: user._id,
                 platform: platform._id,
-                user: userId,
-                name: 'GoogleDrive',
-                credentials: {
-                    hub_id: dto.hub_id,
-                    email: dto.email,
-                    installed_date: dto.installed_date,
-                    token: {
-                        access_token: dto.token?.access_token,
-                        refresh_token: dto.token?.refresh_token,
-                        expires_in: dto.token?.expires_in,
-                        token_type: dto.token?.token_type,
-                        timestamp: dto.token?.timestamp,
-                    },
-                }
+                name: 'Google_Drive',
+                credentials,
             });
-
-
-        await createdApp.save();
+        } else {
+            app.credentials = credentials;
+            await app.save();
+        }
 
         return {
             message: 'Google Drive connected successfully',
-            appId: createdApp._id,
+            hub_id,
+            email: user.email,
         };
     }
 
-    async getUserTokenWithInfo(query: { userId?: string, hubId?: string, email?: string }) {
-        const searchCriteria: any = {};
+    async getUserTokenWithInfo(query: {
+        userId?: string;
+        hubId?: string;
+        email?: string;
+    }) {
+        const search: any = {};
 
         if (query.userId) {
-            searchCriteria.user = query.userId;
+            search.user = query.userId;
         }
 
         if (query.hubId) {
-            searchCriteria['credentials.hub_id'] = query.hubId;
+            search['credentials.hub_id'] = query.hubId;
         }
 
         if (query.email) {
-            searchCriteria['credentials.email'] = query.email;
+            search['credentials.email'] = query.email;
         }
 
-        const app =
-            await this.appModel.findOne(searchCriteria)
-                .populate('user')
-                .exec();
-
+        const app = await this.appModel.findOne(search).
+        populate<{ user: User }>('user').exec();
         if (!app) {
-            throw new NotFoundException('Google Drive credentials not found');
+            throw new NotFoundException('App not found with provided criteria');
         }
 
-        const user = app.user;
+        const data = app.toObject()
 
         return {
-            user_id: user._id,
-            token: app.credentials.token,
+            email:(data?.user as User)?.email,
+            hub_id: app.credentials?.hub_id,
+            token: {
+                access_token: app.credentials?.access_token,
+                refresh_token: app.credentials?.refresh_token,
+            },
+            folder_id: app.credentials?.folder_id
         };
     }
 
 
-    async selectFolder(userId: string, hub_id: string, folderId: string) {
+    async saveGoogleDriveFolderId(userId: string, hub_id: string, folderId: string) {
         const app = await this.appModel.findOne({
             user: userId,
             'credentials.hub_id': hub_id,

@@ -40,7 +40,8 @@ class TokenDto {
 
     @ApiProperty()
     @IsNumber()
-    timestamp: number;
+    folder_id: number;
+
 }
 
 export class GoogleDriveCredentialDto {

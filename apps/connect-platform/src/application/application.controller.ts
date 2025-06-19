@@ -15,6 +15,7 @@ import {
 import {GoogleDriverApplicationService} from "./google-driver-application.service";
 import {AuthUser} from "@app/common/util/decorator/auth-user.decorator";
 import {ApiOperation, ApiQuery} from "@nestjs/swagger";
+import {GoogleAccessTokenGuard} from "@app/common/guard/google.guard";
 
 @Controller('application')
 export class ApplicationController {
@@ -25,6 +26,18 @@ export class ApplicationController {
     private readonly commonApplicationService: CommonApplicationService,
     private readonly googleDriveService: GoogleDriverApplicationService,
   ) { }
+
+  @UseGuards(GoogleAccessTokenGuard)
+  @Get('get-user-info')
+  @ApiQuery({ name: 'hubId', required: false, type: String })
+  @ApiQuery({ name: 'email', required: false, type: String })
+  async getTokenWithUserInfo(
+      @Query('hubId') hubId?: string,
+      @Query('email') email?: string,
+  ) {
+    const query = { hubId, email };
+    return this.googleDriveService.getUserTokenWithInfo(query);
+  }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
@@ -139,8 +152,7 @@ export class ApplicationController {
   }
 
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Admin)
+  @UseGuards(GoogleAccessTokenGuard)
   @Post('connect-gg-driver')
   async connectGoogleDriver(
       @Body() dto: GoogleDriveCredentialDto,
@@ -149,28 +161,13 @@ export class ApplicationController {
     return this.googleDriveService.connectGoogleDrive(dto, userId)
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Admin)
-  @Post('select-folder')
-  async selectGoogleDriveFolder(
+  @UseGuards(GoogleAccessTokenGuard)
+  @Post('save-folder-id')
+  async saveGoogleDriveFolderId(
       @Body() body: { hub_id: string; folderId: string },
       @AuthUser('sub') userId: string,
   ) {
-    return this.googleDriveService.selectFolder(userId, body.hub_id, body.folderId);
-  }
-
-  @Get('get-token-with-user-info')
-  @ApiOperation({ summary: 'Get Google Drive token and user info by userId, hubId, or email' })
-  @ApiQuery({ name: 'userId', required: false, type: String })
-  @ApiQuery({ name: 'hubId', required: false, type: String })
-  @ApiQuery({ name: 'email', required: false, type: String })
-  async getTokenWithUserInfo(
-      @Query('userId') userId?: string,
-      @Query('hubId') hubId?: string,
-      @Query('email') email?: string,
-  ) {
-    const query = { userId, hubId, email };
-    return this.googleDriveService.getUserTokenWithInfo(query);
+    return this.googleDriveService.saveGoogleDriveFolderId(userId, body.hub_id, body.folderId);
   }
 
 

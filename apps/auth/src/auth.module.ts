@@ -6,10 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from './guard/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './guard/roles.guard';
+import {HttpModule} from "@nestjs/axios";
 
 
 @Module({
   imports: [
+    HttpModule,
     CommonModule.forRoot(),
     JwtModule.register({
       global: true,

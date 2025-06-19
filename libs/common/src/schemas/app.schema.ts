@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import {User} from "@app/common/schemas/user.schema";
 
 @Schema({ timestamps: true })
 export class App extends Document {
@@ -7,7 +8,7 @@ export class App extends Document {
   platform: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  user: Types.ObjectId ;
+  user: Types.ObjectId | User ;
 
   @Prop({ required: true })
   name: string;
