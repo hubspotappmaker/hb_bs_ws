@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql
+    container_name: 'base-nest'
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    networks:
+      - mysql
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init-database.sql
+      - ./docker/data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-base_nest}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-gsignal}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gsignal}
+    command: --default-authentication-plugin=mysql_native_password
+networks:
+  mysql:
+    driver: bridge
