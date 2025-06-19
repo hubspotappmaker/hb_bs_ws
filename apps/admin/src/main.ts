@@ -11,8 +11,8 @@ async function bootstrap() {
   const corsOptions = app.get<CorsOptions>(CORS_OPTIONS);
   app.setGlobalPrefix(prefix);
   app.enableCors(corsOptions);
-  console.log('app running on port: 8084')
-  await app.listen(8084);
-  console.log('app running on port: 8084')
+  await app.listen(8080, async () => {
+    console.log("Server is listening on: " + 8080);
+  });
 }
 bootstrap();
