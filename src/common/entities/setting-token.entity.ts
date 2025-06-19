@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "typeorm";
-import {Settings} from "./setting.entity";
+import { Settings } from "./setting.entity";
 
 @Entity("setting-token")
 export class SettingTokenEntity {
