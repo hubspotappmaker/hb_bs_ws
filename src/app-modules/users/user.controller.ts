@@ -1,7 +1,7 @@
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { UserEntity } from "./entities/user.entity";
+import { UserEntity } from "../../common/entities/user.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
 
 @ApiTags("Users")
