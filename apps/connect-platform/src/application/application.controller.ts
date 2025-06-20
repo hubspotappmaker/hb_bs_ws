@@ -27,7 +27,7 @@ export class ApplicationController {
     private readonly googleDriveService: GoogleDriverApplicationService,
   ) { }
 
-  @UseGuards(GoogleAccessTokenGuard)
+  // @UseGuards(GoogleAccessTokenGuard)
   @Get('get-user-info')
   @ApiQuery({ name: 'hubId', required: false, type: String })
   @ApiQuery({ name: 'email', required: false, type: String })
@@ -152,7 +152,7 @@ export class ApplicationController {
   }
 
 
-  @UseGuards(GoogleAccessTokenGuard)
+  // @UseGuards(GoogleAccessTokenGuard)
   @Post('connect-gg-driver')
   async connectGoogleDriver(
       @Body() dto: GoogleDriveCredentialDto,
@@ -161,7 +161,7 @@ export class ApplicationController {
     return this.googleDriveService.connectGoogleDrive(dto, userId)
   }
 
-  @UseGuards(GoogleAccessTokenGuard)
+  // @UseGuards(GoogleAccessTokenGuard)
   @Post('save-folder-id')
   async saveGoogleDriveFolderId(
       @Body() body: { hub_id: string; folderId: string },

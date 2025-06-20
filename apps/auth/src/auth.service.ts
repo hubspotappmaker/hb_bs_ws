@@ -110,10 +110,12 @@ export class AuthService {
           }),
       );
 
+      console.log(res.data,"acbcbabacb")
+
       return res.data;
     } catch (error) {
       const errMsg = error?.response?.data || error.message || 'Unknown error';
-      return null;
+      throw errMsg
     }
   }
 
@@ -121,6 +123,7 @@ export class AuthService {
     const userInfo = await this.fetchGoogleUserInfo({
       access_token: googleLoginDto?.access_token
     });
+    console.log(userInfo,"bat dong bo cmnr")
 
     let user = await this.userModel.findOne({ email: userInfo?.email });
     if (!user) {
