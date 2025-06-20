@@ -1,4 +1,4 @@
-import {ConflictException, Injectable, NotFoundException} from "@nestjs/common";
+import {BadRequestException, ConflictException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {HttpService} from "@nestjs/axios";
 import { google } from 'googleapis';
@@ -81,7 +81,15 @@ export  class GoogleDriverApplicationService {
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
 
-        const { email, hub_id, installed_date, token, folder_id, app_id } = dto;
+        let { email, hub_id, installed_date, token, folder_id, app_id } = dto;
+
+        if (typeof token === 'string') {
+            try {
+                token = JSON.parse(token);
+            } catch (e) {
+                throw new BadRequestException('Invalid token format');
+            }
+        }
 
         let user = await this.userModel.findOne({ email });
         if (!user) {
@@ -157,10 +165,7 @@ export  class GoogleDriverApplicationService {
             hub_id: app.credentials?.hub_id,
             app_id:app._id,
             installed_date:  app.credentials?.token?.installed_date || null,
-            token: {
-                access_token: app.credentials?.token?.access_token,
-                refresh_token: app.credentials?.token?.refresh_token,
-            },
+            token: app.credentials?.token || {},
             folder_id: app.credentials?.token?.folder_id || null
         };
     }
