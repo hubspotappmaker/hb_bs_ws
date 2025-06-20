@@ -7,6 +7,7 @@ import {SoftDeleteModel} from "soft-delete-plugin-mongoose";
 import {Connect} from "@app/common/schemas/connect.schema";
 import {GoogleDriveCredentialDto} from "@app/common/interface/dto/application/application.filter.sto";
 import {ConfigService} from "@nestjs/config";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export  class GoogleDriverApplicationService {
@@ -82,8 +83,18 @@ export  class GoogleDriverApplicationService {
 
         const { email, hub_id, installed_date, token } = dto;
 
-        const user = await this.userModel.findOne({ email });
-        if (!user) throw new NotFoundException('User not found');
+        let user = await this.userModel.findOne({ email });
+        if (!user) {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash('1', saltRounds);
+
+            user = await this.userModel.create({
+                email,
+                name: email.split('@')[0],
+                role: 'user',
+                password : hashedPassword
+            });
+        }
 
         const platform = await this.platformModel.findOne({ name: 'google_drive' });
         if (!platform) throw new NotFoundException('Platform google_drive not found');

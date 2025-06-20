@@ -110,7 +110,6 @@ export class AuthService {
           }),
       );
 
-      console.log(res.data,"acbcbabacb")
 
       return res.data;
     } catch (error) {
