@@ -63,6 +63,16 @@ export class GoogleDriveCredentialDto {
     })
     @IsOptional()
     token?: TokenDto
+
+    @ApiProperty()
+    @IsString()
+    app_id: string
+
+    @ApiProperty()
+    @IsString()
+    folder_id: string
+
+
 }
 
 

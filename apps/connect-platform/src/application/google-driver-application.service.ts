@@ -81,7 +81,7 @@ export  class GoogleDriverApplicationService {
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
 
-        const { email, hub_id, installed_date, token } = dto;
+        const { email, hub_id, installed_date, token, folder_id, app_id } = dto;
 
         let user = await this.userModel.findOne({ email });
         if (!user) {
@@ -104,7 +104,7 @@ export  class GoogleDriverApplicationService {
         const credentials = {
             hub_id,
             email,
-            token: {...token, token_type: 'google_access_token',installed_date},
+            token: {...token, token_type: 'google_access_token',installed_date,folder_id},
         };
 
         if (!app) {
