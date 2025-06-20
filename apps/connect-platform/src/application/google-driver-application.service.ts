@@ -152,15 +152,15 @@ export  class GoogleDriverApplicationService {
         }
 
         const data = app.toObject()
-
         return {
             email:(data?.user as User)?.email,
             hub_id: app.credentials?.hub_id,
+            app_id:app._id,
             token: {
-                access_token: app.credentials?.access_token,
-                refresh_token: app.credentials?.refresh_token,
+                access_token: app.credentials?.token?.access_token,
+                refresh_token: app.credentials?.token?.refresh_token,
             },
-            folder_id: app.credentials?.folder_id
+            folder_id: app.credentials?.token?.folder_id || null
         };
     }
 
