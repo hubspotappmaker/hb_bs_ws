@@ -156,6 +156,7 @@ export  class GoogleDriverApplicationService {
             email:(data?.user as User)?.email,
             hub_id: app.credentials?.hub_id,
             app_id:app._id,
+            installed_date:  app.credentials?.token?.installed_date || null,
             token: {
                 access_token: app.credentials?.token?.access_token,
                 refresh_token: app.credentials?.token?.refresh_token,
