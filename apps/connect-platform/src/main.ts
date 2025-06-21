@@ -44,6 +44,8 @@ async function bootstrap() {
   app.enableCors(corsOptions);
   app.setGlobalPrefix(prefix)
   ;
-  await app.listen(8080);
+  await app.listen(8080, async () => {
+    console.log("Server is listening on: " + 8080);
+  });
 }
 bootstrap();
