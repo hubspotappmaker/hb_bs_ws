@@ -166,7 +166,8 @@ export  class GoogleDriverApplicationService {
             app_id:app._id,
             installed_date:  app.credentials?.token?.installed_date || null,
             token: app.credentials?.token || {},
-            folder_id: app.credentials?.token?.folder_id || null
+            folder_id: app.credentials?.token?.folder_id || null,
+            user_status:(data?.user as User)?.isActive
         };
     }
 
