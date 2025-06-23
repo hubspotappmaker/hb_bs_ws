@@ -105,9 +105,9 @@ export  class GoogleDriverApplicationService {
             });
         }
 
-        const platform = await this.platformModel.findOne({ name: 'google_drive' });
+        let platform = await this.platformModel.findOne({ name: 'google_drive' });
         if (!platform) {
-            await this.platformModel.create({
+            platform = await this.platformModel.create({
                 name: 'google_drive',
                 baseUrl: 'url',
                 type: PlatformType.CRM
