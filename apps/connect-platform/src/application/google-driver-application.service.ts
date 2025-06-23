@@ -1,5 +1,5 @@
 import {BadRequestException, ConflictException, Injectable, NotFoundException} from "@nestjs/common";
-import {InjectModel} from "@nestjs/mongoose";
+import {InjectModel, Prop} from "@nestjs/mongoose";
 import {HttpService} from "@nestjs/axios";
 import { google } from 'googleapis';
 import {App, Field, Platform, User} from "@app/common";
@@ -8,6 +8,7 @@ import {Connect} from "@app/common/schemas/connect.schema";
 import {GoogleDriveCredentialDto} from "@app/common/interface/dto/application/application.filter.sto";
 import {ConfigService} from "@nestjs/config";
 import * as bcrypt from "bcrypt";
+import {PlatformType} from "@app/common/interface/enum/platform.enum";
 
 @Injectable()
 export  class GoogleDriverApplicationService {
@@ -105,7 +106,13 @@ export  class GoogleDriverApplicationService {
         }
 
         const platform = await this.platformModel.findOne({ name: 'google_drive' });
-        if (!platform) throw new NotFoundException('Platform google_drive not found');
+        if (!platform) {
+            await this.platformModel.create({
+                name: 'google_drive',
+                baseUrl: 'url',
+                type: PlatformType.CRM
+            });
+        }
 
         let app = await this.appModel.findOne({ user: user._id, platform: platform._id });
 
