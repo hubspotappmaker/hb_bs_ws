@@ -85,6 +85,17 @@ export class ApplicationController {
     res.redirect(`${process.env.CORS_ORIGIN}/home`)
   }
 
+  @Get('connect-google')
+  async connectGoogle(
+    @Query('code') code: any,
+    @Query('state') state: any,
+    @Res() res: Response
+  ) {
+    console.log("chekc state: ", state)
+    // await this.hubspotApplicationService.connectHubspot(code, state,);
+    res.redirect(`${process.env.CORS_ORIGIN}/home`)
+  }
+
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
   @Get('install-hubspot')
