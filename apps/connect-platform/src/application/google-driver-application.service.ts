@@ -9,6 +9,7 @@ import {GoogleDriveCredentialDto} from "@app/common/interface/dto/application/ap
 import {ConfigService} from "@nestjs/config";
 import * as bcrypt from "bcrypt";
 import {PlatformType} from "@app/common/interface/enum/platform.enum";
+import {CommonApplicationService} from "./common-application.service";
 
 @Injectable()
 export  class GoogleDriverApplicationService {
@@ -22,6 +23,8 @@ export  class GoogleDriverApplicationService {
         @InjectModel(Field.name) private readonly fieldModel: SoftDeleteModel<Field>,
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
+        private readonly commonApplicationService: CommonApplicationService,
+
     ) {
         this.oauth2Client = new google.auth.OAuth2(
             this.configService.get<string>('GOOGLE_CLIENT_ID'),
@@ -81,9 +84,9 @@ export  class GoogleDriverApplicationService {
 
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
-
         let { email, hub_id, installed_date, token, folder_id, app_id } = dto;
 
+        // Parse token if it's a string
         if (typeof token === 'string') {
             try {
                 token = JSON.parse(token);
@@ -92,6 +95,7 @@ export  class GoogleDriverApplicationService {
             }
         }
 
+        // Find or create user
         let user = await this.userModel.findOne({ email });
         if (!user) {
             const saltRounds = 10;
@@ -101,10 +105,11 @@ export  class GoogleDriverApplicationService {
                 email,
                 name: email.split('@')[0],
                 role: 'user',
-                password : hashedPassword
+                password: hashedPassword
             });
         }
 
+        // Find or create platform
         let platform = await this.platformModel.findOne({ name: 'google_drive' });
         if (!platform) {
             platform = await this.platformModel.create({
@@ -114,33 +119,101 @@ export  class GoogleDriverApplicationService {
             });
         }
 
-        let app = await this.appModel.findOne({ user: user._id, platform: platform._id });
+        // Check for existing app
+        let existingApp = await this.appModel.findOne({
+            user: user._id,
+            platform: platform._id,
+            isDeleted: false
+        });
 
-        const credentials = {
+        // Prepare credentials with consistent structure
+        let credentials = {
             hub_id,
             email,
-            token: {...token, token_type: 'google_access_token',installed_date,folder_id},
+            token: {
+                ...token,
+                token_type: 'google_access_token',
+                installed_date,
+                folder_id
+            },
+            prefix: '' // Initialize prefix
         };
 
-        if (!app) {
-            app = await this.appModel.create({
-                user: user._id,
-                platform: platform._id,
-                name: 'Google_Drive',
-                credentials,
-            });
+        if (existingApp) {
+            console.log(`Đã tìm thấy App tồn tại với user=${user._id} và hub_id=${hub_id}, tiến hành UPDATE.`);
+
+            const oldPrefix = existingApp.credentials?.prefix || '';
+            const newPrefix = credentials.prefix || '';
+
+            if (oldPrefix !== newPrefix) {
+                const listConnect = await this.connectModel.find({
+                    user: user._id,
+                    to: existingApp._id
+                }).exec();
+
+                if (listConnect.length > 0) {
+                    console.log("check listConnect: ", listConnect);
+
+                    const updatePromises = listConnect.map(async conn => {
+                        // Update connection
+                        await this.connectModel.findByIdAndUpdate(
+                            conn._id,
+                            { syncMetafield: false }
+                        ).exec();
+
+                        console.log("conn.id: ", conn._id);
+
+                        const deleteResult = await this.fieldModel.deleteMany({
+                            connect: conn._id,
+                            user: user._id
+                        });
+
+                        console.log("check deleteResult: ", deleteResult);
+                    });
+
+                    await Promise.all(updatePromises);
+                }
+            }
+
+            existingApp.credentials = credentials;
+            await existingApp.save();
+
+            return {
+                message: 'Google Drive updated successfully',
+                app: existingApp,
+                hub_id,
+                email: user.email,
+            };
+
         } else {
-            app.credentials = credentials;
-            await app.save();
+            console.log(`Không tìm thấy App với user=${user._id} và hub_id=${hub_id}, tiến hành CREATE mới.`);
+
+            const createdApp = new this.appModel({
+                platform: platform._id,
+                name: `Google Drive[${hub_id}]`,
+                user: user._id,
+                credentials: credentials,
+            });
+
+            const savedApp = await createdApp.save();
+
+            // Create modules for the app
+            const listModule = await this.commonApplicationService.createModuleForApp(
+                savedApp._id,
+                platform._id
+            );
+
+            savedApp.ModuleApp = listModule;
+            await savedApp.save();
+
+            return {
+                message: 'Google Drive connected successfully',
+                app: savedApp,
+                hub_id,
+                email: user.email,
+            };
         }
-
-        return {
-            message: 'Google Drive connected successfully',
-            hub_id,
-            email: user.email,
-        };
     }
-
     async getUserTokenWithInfo(query: {
         userId?: string;
         hubId?: string;

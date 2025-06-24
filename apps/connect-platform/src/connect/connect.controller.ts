@@ -16,12 +16,13 @@ export class ConnectController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
   @Get('get-all')
+
   async getAllApplication(
     @Query() paginationDto: PaginationDto,
     @Req() req: Request,
   ) {
     const user = req['user'] as any;
-    return this.connectService.getAllApplication(paginationDto, user.sub);
+    return this.connectService.getAllApplication(paginationDto, user?.sub);
   }
 
   @UseGuards(AuthGuard, RolesGuard)

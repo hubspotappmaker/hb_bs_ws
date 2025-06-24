@@ -76,12 +76,12 @@ export class ApplicationController {
 
   @Get('connect-hubspot')
   async connectHubspot(
-    @Query('code') code: string,
-    @Query('state') state: string,
+    @Query('code') code: any,
+    @Query('state') state: any,
     @Res() res: Response
   ) {
     console.log("chekc state: ", state)
-    await this.hubspotApplicationService.connectHubspot(code, state);
+    await this.hubspotApplicationService.connectHubspot(code, state,);
     res.redirect(`${process.env.CORS_ORIGIN}/home`)
   }
 
@@ -103,6 +103,7 @@ export class ApplicationController {
     const jstring = JSON.stringify(payload)
 
     const target_link = `${process.env.HUBSPOT_INSTALL_URL}&state=${jstring}`;
+    console.log(target_link,'????????')
     return target_link
   }
 
