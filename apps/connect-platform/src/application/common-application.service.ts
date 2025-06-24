@@ -8,6 +8,7 @@ import { CommonModuleName } from '@app/common/interface/enum/module.enum';
 import * as jwt from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@app/common/interface/enum/user.enum';
+import mongoose, {Schema, Types} from "mongoose";
 @Injectable()
 export class CommonApplicationService {
 
@@ -103,10 +104,14 @@ export class CommonApplicationService {
     ): Promise<PaginationResponse> {
         const { platform, page, limit } = applicationFilterDto;
 
-        const filter: any = {
-            user: user_id,
+
+
+        const filter:any = {
+            user: new Types.ObjectId(user_id),
             isDeleted: false,
         };
+
+
 
         if (platform)
         {
@@ -127,16 +132,18 @@ export class CommonApplicationService {
             }
         }
 
+
         const totalRecord = await this.appModel.countDocuments(filter);
-        const totalPage = Math.ceil(totalRecord / limit);
 
         const data = await this.appModel
             .find(filter)
             .skip((page - 1) * limit)
             .limit(limit)
             .populate('platform')
-            // .select('-credentials')
             .exec();
+
+
+        const totalPage = Math.ceil(totalRecord / limit);
 
         return {
             data,
