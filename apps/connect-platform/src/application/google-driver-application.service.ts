@@ -84,7 +84,7 @@ export  class GoogleDriverApplicationService {
 
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
-        let { email, hub_id, installed_date, token, folder_id, app_id } = dto;
+        let { email, hub_id, installed_date, token, folder_id, app_id, platform_name } = dto;
 
         // Parse token if it's a string
         if (typeof token === 'string') {
@@ -109,14 +109,35 @@ export  class GoogleDriverApplicationService {
             });
         }
 
-        // Find or create platform
-        let platform = await this.platformModel.findOne({ name: 'google_drive' });
-        if (!platform) {
-            platform = await this.platformModel.create({
-                name: 'google_drive',
-                baseUrl: 'url',
-                type: PlatformType.CRM
+        // Handle platform creation/retrieval
+        let platform;
+        if (platform_name) {
+            // Find specific platform
+            platform = await this.platformModel.findOne({ name: platform_name });
+            if (!platform) {
+                platform = await this.platformModel.create({
+                    name: platform_name,
+                    baseUrl: 'url',
+                    type: PlatformType.CRM
+                });
+            }
+        } else {
+            // Create both platforms if none specified
+            const platforms = ['google_drive', 'Hubspot'];
+            const platformPromises = platforms.map(async (platformName) => {
+                let existingPlatform = await this.platformModel.findOne({ name: platformName });
+                if (!existingPlatform) {
+                    existingPlatform = await this.platformModel.create({
+                        name: platformName,
+                        baseUrl: 'url',
+                        type: PlatformType.CRM
+                    });
+                }
+                return existingPlatform;
             });
+
+            const createdPlatforms = await Promise.all(platformPromises);
+            platform = createdPlatforms[0]; // Use first platform as default
         }
 
         // Check for existing app
@@ -126,22 +147,58 @@ export  class GoogleDriverApplicationService {
             isDeleted: false
         });
 
-        // Prepare credentials with consistent structure
-        let credentials = {
-            hub_id,
-            email,
-            token: {
-                ...token,
-                token_type: 'google_access_token',
-                installed_date,
-                folder_id
-            },
-            prefix: '' // Initialize prefix
-        };
+        // Prepare credentials based on platform
+        let credentials;
+        let appName;
+
+        switch (platform.name.toLowerCase()) {
+            case 'google_drive':
+                credentials = {
+                    hub_id,
+                    email,
+                    token: {
+                        ...token,
+                        token_type: 'google_access_token',
+                        installed_date,
+                        folder_id
+                    },
+                    prefix: ''
+                };
+                appName = `Google Drive[${hub_id}]`;
+                break;
+
+            case 'hubspot':
+                credentials = {
+                    portalId: hub_id,
+                    refresh_token: token?.refresh_token,
+                    access_token: token?.access_token,
+                    email,
+                    fullName: token?.full_name || email.split('@')[0],
+                    prefix: token?.prefix || ''
+                };
+                appName = `HubSpot[${hub_id}]`;
+                break;
+
+            default:
+                // Generic credentials structure
+                credentials = {
+                    hub_id,
+                    email,
+                    token: {
+                        ...token,
+                        installed_date,
+                        folder_id
+                    },
+                    prefix: ''
+                };
+                appName = `${platform.name}[${hub_id}]`;
+                break;
+        }
 
         if (existingApp) {
-            console.log(`Đã tìm thấy App tồn tại với user=${user._id} và hub_id=${hub_id}, tiến hành UPDATE.`);
+            console.log(`Đã tìm thấy App tồn tại với user=${user._id} và hub_id=${hub_id} cho platform=${platform.name}, tiến hành UPDATE.`);
 
+            // Check if prefix has changed (using empty string as default for comparison)
             const oldPrefix = existingApp.credentials?.prefix || '';
             const newPrefix = credentials.prefix || '';
 
@@ -163,6 +220,7 @@ export  class GoogleDriverApplicationService {
 
                         console.log("conn.id: ", conn._id);
 
+                        // Delete related fields
                         const deleteResult = await this.fieldModel.deleteMany({
                             connect: conn._id,
                             user: user._id
@@ -175,22 +233,25 @@ export  class GoogleDriverApplicationService {
                 }
             }
 
+            // Update existing app credentials
             existingApp.credentials = credentials;
+            existingApp.name = appName; // Update name in case platform changed
             await existingApp.save();
 
             return {
-                message: 'Google Drive updated successfully',
+                message: `${platform.name} updated successfully`,
                 app: existingApp,
                 hub_id,
                 email: user.email,
+                platform: platform.name
             };
 
         } else {
-            console.log(`Không tìm thấy App với user=${user._id} và hub_id=${hub_id}, tiến hành CREATE mới.`);
+            console.log(`Không tìm thấy App với user=${user._id} và hub_id=${hub_id} cho platform=${platform.name}, tiến hành CREATE mới.`);
 
             const createdApp = new this.appModel({
                 platform: platform._id,
-                name: `Google Drive[${hub_id}]`,
+                name: appName,
                 user: user._id,
                 credentials: credentials,
             });
@@ -207,10 +268,11 @@ export  class GoogleDriverApplicationService {
             await savedApp.save();
 
             return {
-                message: 'Google Drive connected successfully',
+                message: `${platform.name} connected successfully`,
                 app: savedApp,
                 hub_id,
                 email: user.email,
+                platform: platform.name
             };
         }
     }

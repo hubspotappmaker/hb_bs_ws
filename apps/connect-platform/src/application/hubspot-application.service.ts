@@ -26,13 +26,14 @@ export class HubspotApplicationService {
   ) { }
 
   async connectHubspot(code: any, state: any) {
+    console.log(code,state)
     const { user_id, prefix, portalId,email,fullName } = JSON.parse(state)
 
     const proPrifix: string = prefix;
 
     if (!code || !user_id)
     {
-      throw new BadRequestException('Missing required parameters: code or user_id');
+      throw new BadRequestException('Missing requird parameters: code or user_id');
     }
 
     const existUser = await this.userModel.findOne({ _id: user_id });

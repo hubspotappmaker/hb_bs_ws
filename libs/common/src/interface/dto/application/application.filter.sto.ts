@@ -23,28 +23,40 @@ export class UpdateAppDto {
 
 class TokenDto {
     @ApiProperty()
-    @IsString()
+    @IsOptional()
     access_token: string;
 
     @ApiProperty()
-    @IsString()
+    @IsOptional()
     refresh_token: string;
 
     @ApiProperty()
-    @IsNumber()
+    @IsOptional()
     expires_in: number;
 
     @ApiProperty()
-    @IsString()
+    @IsOptional()
     token_type: string;
 
     @ApiProperty()
-    @IsNumber()
+    @IsOptional()
     folder_id: number;
+
+    @ApiProperty()
+    @IsOptional()
+    prefix:any;
+
+    @ApiProperty()
+    @IsOptional()
+    full_name:any;
 
 }
 
 export class GoogleDriveCredentialDto {
+
+    @ApiProperty()
+    @IsString()
+    platform_name:string
 
     @ApiProperty()
     @IsString()
