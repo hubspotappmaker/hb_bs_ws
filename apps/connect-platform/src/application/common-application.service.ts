@@ -106,7 +106,7 @@ export class CommonApplicationService {
 
 
 
-        const filter:any = {
+        let filter:any = {
             user: new Types.ObjectId(user_id),
             isDeleted: false,
         };
@@ -118,7 +118,7 @@ export class CommonApplicationService {
             const platformExist = await this.platformModel.findOne({ type: platform });
             if (platformExist)
             {
-                filter.platform = platformExist._id;
+                filter.platform = platformExist._id.toString();
                 console.log("filter có platform:", platformExist._id);
             } else
             {
@@ -131,7 +131,6 @@ export class CommonApplicationService {
                 };
             }
         }
-
 
         const totalRecord = await this.appModel.countDocuments(filter);
 

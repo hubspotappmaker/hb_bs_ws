@@ -8,7 +8,7 @@ import {Connect} from "@app/common/schemas/connect.schema";
 import {GoogleDriveCredentialDto} from "@app/common/interface/dto/application/application.filter.sto";
 import {ConfigService} from "@nestjs/config";
 import * as bcrypt from "bcrypt";
-import {PlatformType} from "@app/common/interface/enum/platform.enum";
+import {PlatformName, PlatformType} from "@app/common/interface/enum/platform.enum";
 import {CommonApplicationService} from "./common-application.service";
 
 @Injectable()
@@ -83,6 +83,7 @@ export  class GoogleDriverApplicationService {
     }
 
 
+
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
         let { email, hub_id, installed_date, token, folder_id, app_id, platform_name } = dto;
 
@@ -123,7 +124,7 @@ export  class GoogleDriverApplicationService {
             }
         } else {
             // Create both platforms if none specified
-            const platforms = ['google_drive', 'Hubspot'];
+            const platforms = [PlatformName.GOOGLE_DRIVE, PlatformName.HUBSPOT];
             const platformPromises = platforms.map(async (platformName) => {
                 let existingPlatform = await this.platformModel.findOne({ name: platformName });
                 if (!existingPlatform) {
@@ -164,7 +165,7 @@ export  class GoogleDriverApplicationService {
                     },
                     prefix: ''
                 };
-                appName = `Google Drive[${hub_id}]`;
+                appName = `GoogleDrive[${hub_id}]`;
                 break;
 
             case 'hubspot':
@@ -174,13 +175,13 @@ export  class GoogleDriverApplicationService {
                     access_token: token?.access_token,
                     email,
                     fullName: token?.full_name || email.split('@')[0],
-                    prefix: token?.prefix || ''
+                    prefix: token?.prefix || '',
+                    token_type: 'hubspot_access_token',
                 };
                 appName = `HubSpot[${hub_id}]`;
                 break;
 
             default:
-                // Generic credentials structure
                 credentials = {
                     hub_id,
                     email,
@@ -198,7 +199,6 @@ export  class GoogleDriverApplicationService {
         if (existingApp) {
             console.log(`Đã tìm thấy App tồn tại với user=${user._id} và hub_id=${hub_id} cho platform=${platform.name}, tiến hành UPDATE.`);
 
-            // Check if prefix has changed (using empty string as default for comparison)
             const oldPrefix = existingApp.credentials?.prefix || '';
             const newPrefix = credentials.prefix || '';
 
@@ -314,26 +314,37 @@ export  class GoogleDriverApplicationService {
     }
 
 
-    async saveGoogleDriveFolderId(userId: string, hub_id: string, folderId: string) {
-        const app = await this.appModel.findOne({
-            user: userId,
-            'credentials.hub_id': hub_id,
-            isDeleted: false,
-        });
+    async saveGoogleDriveFolderId(email) {
 
-        if (!app) {
-            throw new NotFoundException('Connected app not found');
+        const platform: Platform | null = await this.platformModel.findOne({ name: 'Hubspot' });
+        if (!platform) {
+            throw new Error('Không tìm thấy platform Hubspot');
         }
 
-        const credentials = app.credentials;
+        const user: User | null = await this.userModel.findOne({ email: email });
+        if (!user) {
+            throw new Error('Không tìm thấy user với email đã cung cấp');
+        }
 
-        // Update the app with the folderId
-        credentials.drive_root_folder_id = folderId;
-        await app.save();
 
-        return {
-            message: 'Folder successfully selected and saved.',
-            folderId: app.credentials.drive_root_folder_id,
-        };
+
+        let existingApp = await this.appModel.findOne({
+            user: user?._id,
+            platform: platform?._id,
+            isDeleted: false
+        });
+
+
+        if(!existingApp){
+            throw new BadRequestException('Người dùng chưa kết nối hubspot')
+        }else {
+            if (existingApp.credentials?.hub_id) {
+            } else {
+                return {
+                    hub_id: existingApp.credentials?.hub_id
+                }
+            }
+        }
     }
+
 }

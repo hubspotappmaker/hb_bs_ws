@@ -10,6 +10,7 @@ import { ConnectWebhookService } from './connect-webhook.service';
 import { PlatformName } from '@app/common/interface/enum/platform.enum';
 import { ShopifyApplicationService } from '../application/shopify-application.service';
 import { HubspotApplicationService } from '../application/hubspot-application.service';
+import {Types} from "mongoose";
 
 @Injectable()
 export class ConnectService {
@@ -25,10 +26,11 @@ export class ConnectService {
         console.log("check paginationDto: ", JSON.stringify(paginationDto));
         const { page, limit } = paginationDto;
 
-        const filter = {
-            user: user_id,
+        const filter:any = {
+            user: new Types.ObjectId(user_id),
             isDeleted: false,
         };
+        console.log(filter)
 
         const totalRecord = await this.connectModel.countDocuments(filter);
         const totalPage = Math.ceil(totalRecord / limit);

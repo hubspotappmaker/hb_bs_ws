@@ -28,6 +28,18 @@ export class ApplicationController {
   ) { }
 
   // @UseGuards(GoogleAccessTokenGuard)
+
+  @Get('connect_google')
+  async connectGoogle(
+      @Query('code') code: any,
+      @Query('state') state: any,
+      @Res() res: Response
+  ) {
+    console.log("chekc state: ", state)
+    // await this.hubspotApplicationService.connectHubspot(code, state,);
+    res.redirect(`${process.env.CORS_ORIGIN}/home`)
+  }
+
   @Get('get-user-info')
   @ApiQuery({ name: 'hubId', required: false, type: String })
   @ApiQuery({ name: 'email', required: false, type: String })
@@ -85,16 +97,7 @@ export class ApplicationController {
     res.redirect(`${process.env.CORS_ORIGIN}/home`)
   }
 
-  @Get('connect-google')
-  async connectGoogle(
-    @Query('code') code: any,
-    @Query('state') state: any,
-    @Res() res: Response
-  ) {
-    console.log("chekc state: ", state)
-    // await this.hubspotApplicationService.connectHubspot(code, state,);
-    res.redirect(`${process.env.CORS_ORIGIN}/home`)
-  }
+
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
@@ -129,16 +132,16 @@ export class ApplicationController {
     return this.commonApplicationService.getAllApplication(applicationFilterDto, user.sub);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.User, Role.Admin)
-  @Get(':id')
-  async getOneByID(
-    @Req() req: Request,
-    @Param("id") id: string
-  ) {
-    const user = req['user'] as any;
-    return this.commonApplicationService.getOneByID(id, user.sub);
-  }
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(Role.User, Role.Admin)
+  // @Get(':id')
+  // async getOneByID(
+  //   @Req() req: Request,
+  //   @Param("id") id: string
+  // ) {
+  //   const user = req['user'] as any;
+  //   return this.commonApplicationService.getOneByID(id, user.sub);
+  // }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
@@ -174,13 +177,9 @@ export class ApplicationController {
   }
 
   // @UseGuards(GoogleAccessTokenGuard)
-  @Post('save-folder-id')
-  async saveGoogleDriveFolderId(
-      @Body() body: { hub_id: string; folderId: string },
-      @AuthUser('sub') userId: string,
-  ) {
-    return this.googleDriveService.saveGoogleDriveFolderId(userId, body.hub_id, body.folderId);
+  @Get('check-hub-id')
+  async checkHubId(@Query('email') email: string) {
+    return this.googleDriveService.saveGoogleDriveFolderId(email);
   }
-
 
 }

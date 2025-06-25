@@ -3,6 +3,7 @@ export enum PlatformType {
   ECOMMERCE = 'ecommerce',
 }
 
+
 export enum DataType {
   STRING = 'String',
   NUMBER = 'Number',
@@ -14,6 +15,7 @@ export enum DataType {
 }
 
 export enum PlatformName {
+  GOOGLE_DRIVE = 'google_drive',
   SHOPIFY = 'Shopify',
   HUBSPOT = 'Hubspot',
 }
