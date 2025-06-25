@@ -327,10 +327,9 @@ export  class GoogleDriverApplicationService {
         }
 
 
-
         let existingApp = await this.appModel.findOne({
             user: user?._id,
-            platform: platform?._id,
+            platform: platform?._id.toString(),
             isDeleted: false
         });
 
@@ -338,10 +337,11 @@ export  class GoogleDriverApplicationService {
         if(!existingApp){
             throw new BadRequestException('Người dùng chưa kết nối hubspot')
         }else {
-            if (existingApp.credentials?.hub_id) {
+            if (!existingApp.credentials?.portalId) {
+                throw new BadRequestException('Người dùng chưa kết nối hubspot!')
             } else {
                 return {
-                    hub_id: existingApp.credentials?.hub_id
+                    hub_id: existingApp.credentials?.portalId
                 }
             }
         }

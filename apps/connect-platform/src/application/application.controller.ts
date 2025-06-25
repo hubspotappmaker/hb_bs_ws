@@ -27,7 +27,6 @@ export class ApplicationController {
     private readonly googleDriveService: GoogleDriverApplicationService,
   ) { }
 
-  // @UseGuards(GoogleAccessTokenGuard)
 
   @Get('connect_google')
   async connectGoogle(
@@ -176,10 +175,10 @@ export class ApplicationController {
     return this.googleDriveService.connectGoogleDrive(dto, userId)
   }
 
-  // @UseGuards(GoogleAccessTokenGuard)
   @Get('check-hub-id')
   async checkHubId(@Query('email') email: string) {
-    return this.googleDriveService.saveGoogleDriveFolderId(email);
+   const data = await this.googleDriveService.saveGoogleDriveFolderId(email);
+    return data.hub_id
   }
 
 }
