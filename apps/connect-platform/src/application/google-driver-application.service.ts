@@ -303,7 +303,7 @@ export  class GoogleDriverApplicationService {
             search['credentials.email'] = query.email;
         }
         if (query.portalId) {
-            search['credentials.portal_id'] = query.portalId;
+            search['credentials.hub_id'] = query.portalId;
         }
 
         if(query.platformName){
@@ -314,6 +314,8 @@ export  class GoogleDriverApplicationService {
                 throw new NotFoundException('Platform not found');
             }
         }
+
+        // console.log(search)
 
         const app = await this.appModel.findOne(search).
         populate<{ user: User }>('user').exec();
