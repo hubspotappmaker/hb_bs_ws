@@ -148,9 +148,9 @@ export  class GoogleDriverApplicationService {
             isDeleted: false,
         };
 
-        // if (hub_id) {
-        //     query['credentials.hub_id'] = hub_id;
-        // }
+        if (hub_id && platform_name === PlatformName.HUBSPOT) {
+            query['credentials.hub_id'] = hub_id;
+        }
 
         if (folder_id) {
             query['credentials.folder_id'] = folder_id;
