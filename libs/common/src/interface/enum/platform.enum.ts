@@ -17,7 +17,7 @@ export enum DataType {
 export enum PlatformName {
   GOOGLE_DRIVE = 'google_drive',
   SHOPIFY = 'Shopify',
-  HUBSPOT = 'Hubspot',
+  HUBSPOT = 'hubspot',
 }
 
 export enum ModuleSync {

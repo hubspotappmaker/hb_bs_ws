@@ -1,7 +1,7 @@
-import {BadRequestException, ConflictException, Injectable, NotFoundException} from "@nestjs/common";
-import {InjectModel, Prop} from "@nestjs/mongoose";
+import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
+import {InjectModel} from "@nestjs/mongoose";
 import {HttpService} from "@nestjs/axios";
-import { google } from 'googleapis';
+import {google} from 'googleapis';
 import {App, Field, Platform, User} from "@app/common";
 import {SoftDeleteModel} from "soft-delete-plugin-mongoose";
 import {Connect} from "@app/common/schemas/connect.schema";
@@ -131,7 +131,7 @@ export  class GoogleDriverApplicationService {
                     existingPlatform = await this.platformModel.create({
                         name: platformName,
                         baseUrl: 'url',
-                        type: PlatformType.CRM
+                        type: PlatformName.GOOGLE_DRIVE ? PlatformType.ECOMMERCE : PlatformType.CRM
                     });
                 }
                 return existingPlatform;
@@ -178,7 +178,7 @@ export  class GoogleDriverApplicationService {
                     prefix: token?.prefix || '',
                     token_type: 'hubspot_access_token',
                 };
-                appName = `HubSpot[${hub_id}]`;
+                appName = `hubSpot[${hub_id}]`;
                 break;
 
             default:
@@ -330,10 +330,9 @@ export  class GoogleDriverApplicationService {
             throw new Error('Không tìm thấy user với email đã cung cấp');
         }
 
-
         let existingApp = await this.appModel.findOne({
             user: user?._id,
-            platform: platform?._id.toString(),
+            platform: platform?._id,
             isDeleted: false
         });
 
