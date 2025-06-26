@@ -118,9 +118,10 @@ export class CommonApplicationService {
         if (platform)
         {
             const platformExist = await this.platformModel.findOne({ type: platform });
+            console.log(platformExist)
             if (platformExist)
             {
-                filter.platform = platformExist._id.toString();
+                filter.platform = platformExist._id;
                 console.log("filter có platform:", platformExist._id);
             } else
             {
@@ -135,7 +136,7 @@ export class CommonApplicationService {
         }
 
         const totalRecord = await this.appModel.countDocuments(filter);
-
+        console.log(filter,"filter")
         const data = await this.appModel
             .find(filter)
             .skip((page - 1) * limit)
