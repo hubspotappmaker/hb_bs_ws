@@ -111,7 +111,7 @@ export class ConnectService {
             { _id: dto.to },
             {
                 $set: {
-                    'credentials.token': tokenNew,
+                    'credentials': tokenNew,
                 },
             },
         );
