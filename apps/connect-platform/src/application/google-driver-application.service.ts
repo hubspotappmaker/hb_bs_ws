@@ -289,15 +289,16 @@ export  class GoogleDriverApplicationService {
         }
 
         if (query.hubId) {
-            search['credentials.portalId'] = query.hubId;
+            search['credentials.hub_id'] = query.hubId;
         }
 
         if (query.email) {
             search['credentials.email'] = query.email;
         }
         if (query.portalId) {
-            search['credentials.email'] = query.portalId;
+            search['credentials.portal_id'] = query.portalId;
         }
+        console.log(search)
 
         const app = await this.appModel.findOne(search).
         populate<{ user: User }>('user').exec();
