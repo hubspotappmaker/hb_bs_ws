@@ -27,7 +27,7 @@ export class ConnectService {
         const { page, limit } = paginationDto;
 
         const filter:any = {
-            user: new Types.ObjectId(user_id),
+            user: new Types.ObjectId(user_id).toString(),
             isDeleted: false,
         };
         console.log(filter)
