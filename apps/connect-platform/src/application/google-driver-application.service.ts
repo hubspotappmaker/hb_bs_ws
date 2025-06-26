@@ -300,9 +300,9 @@ export  class GoogleDriverApplicationService {
             search.user = query.userId;
         }
 
-        // if (query.hubId) {
-        //     search['credentials.hub_id'] = query.hubId;
-        // }
+        if (query.hubId) {
+            search['credentials.hub_id'] = query.hubId;
+        }
 
         if (query.email) {
             search['credentials.email'] = query.email;
