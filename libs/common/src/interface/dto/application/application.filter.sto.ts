@@ -59,7 +59,7 @@ export class GoogleDriveCredentialDto {
     platform_name:string
 
     @ApiProperty()
-    @IsString()
+    @IsOptional()
      hub_id: string;
 
     @ApiProperty()
