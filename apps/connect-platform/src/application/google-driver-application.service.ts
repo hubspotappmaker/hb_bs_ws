@@ -148,9 +148,14 @@ export  class GoogleDriverApplicationService {
             isDeleted: false,
         };
 
-        if (hub_id) {
-            query['credentials.hub_id'] = hub_id;
+        // if (hub_id) {
+        //     query['credentials.hub_id'] = hub_id;
+        // }
+
+        if (folder_id) {
+            query['credentials.folder_id'] = folder_id;
         }
+
         // Check for existing app
         let existingApp = await this.appModel.findOne(query);
 
@@ -171,7 +176,7 @@ export  class GoogleDriverApplicationService {
                     },
                     prefix: ''
                 };
-                appName = `GoogleDrive[${hub_id}]`;
+                appName = `GoogleDrive[${folder_id}]`;
                 break;
 
             case 'hubspot':
