@@ -320,12 +320,12 @@ export  class GoogleDriverApplicationService {
 
     async saveGoogleDriveFolderId(email) {
 
-        const platform: Platform | null = await this.platformModel.findOne({ name: 'Hubspot' });
+        const platform: Platform | any = await this.platformModel.findOne({ name: PlatformName.HUBSPOT });
         if (!platform) {
             throw new Error('Không tìm thấy platform Hubspot');
         }
 
-        const user: User | null = await this.userModel.findOne({ email: email });
+        const user: User | any = await this.userModel.findOne({ email: email });
         if (!user) {
             throw new Error('Không tìm thấy user với email đã cung cấp');
         }
@@ -340,11 +340,12 @@ export  class GoogleDriverApplicationService {
         if(!existingApp){
             throw new BadRequestException('Người dùng chưa kết nối hubspot')
         }else {
-            if (!existingApp.credentials?.portalId) {
+            console.log(existingApp)
+            if (!existingApp.credentials?.hub_id) {
                 throw new BadRequestException('Người dùng chưa kết nối hubspot!')
             } else {
                 return {
-                    hub_id: existingApp.credentials?.portalId
+                    hub_id: existingApp.credentials?.hub_id
                 }
             }
         }

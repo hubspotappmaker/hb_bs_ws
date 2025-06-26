@@ -111,6 +111,8 @@ export class CommonApplicationService {
             isDeleted: false,
         };
 
+        console.log(filter,"filter")
+
 
 
         if (platform)
