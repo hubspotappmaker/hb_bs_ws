@@ -41,12 +41,14 @@ export class ApplicationController {
 
   @Get('get-user-info')
   @ApiQuery({ name: 'hubId', required: false, type: String })
+  @ApiQuery({ name: 'portalId', required: false, type: String })
   @ApiQuery({ name: 'email', required: false, type: String })
   async getTokenWithUserInfo(
       @Query('hubId') hubId?: string,
       @Query('email') email?: string,
+      @Query('portalId') portalId?: string,
   ) {
-    const query = { hubId, email };
+    const query = { hubId, email ,portalId};
     return this.googleDriveService.getUserTokenWithInfo(query);
   }
 

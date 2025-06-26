@@ -170,7 +170,7 @@ export  class GoogleDriverApplicationService {
 
             case 'hubspot':
                 credentials = {
-                    portalId: hub_id,
+                    hub_id: hub_id,
                     refresh_token: token?.refresh_token,
                     access_token: token?.access_token,
                     email,
@@ -280,6 +280,7 @@ export  class GoogleDriverApplicationService {
         userId?: string;
         hubId?: string;
         email?: string;
+        portalId? : string
     }) {
         const search: any = {};
 
@@ -288,11 +289,14 @@ export  class GoogleDriverApplicationService {
         }
 
         if (query.hubId) {
-            search['credentials.hub_id'] = query.hubId;
+            search['credentials.portalId'] = query.hubId;
         }
 
         if (query.email) {
             search['credentials.email'] = query.email;
+        }
+        if (query.portalId) {
+            search['credentials.email'] = query.portalId;
         }
 
         const app = await this.appModel.findOne(search).
