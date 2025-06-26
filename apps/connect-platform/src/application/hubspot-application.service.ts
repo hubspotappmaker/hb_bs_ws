@@ -56,7 +56,7 @@ export class HubspotApplicationService {
 
     const existingApp = await this.appModel.findOne({
       user: user_id,
-      'credentials.portalId': portalId,
+      'credentials.hub_id': portalId,
       isDeleted: false
     });
 

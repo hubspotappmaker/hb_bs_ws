@@ -145,6 +145,7 @@ export  class GoogleDriverApplicationService {
         let existingApp = await this.appModel.findOne({
             user: user._id,
             platform: platform._id,
+            hub_id: hub_id,
             isDeleted: false
         });
 
