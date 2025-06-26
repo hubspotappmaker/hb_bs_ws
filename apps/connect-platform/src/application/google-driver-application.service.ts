@@ -141,14 +141,18 @@ export  class GoogleDriverApplicationService {
             platform = createdPlatforms[0]; // Use first platform as default
         }
 
-        // Check for existing app
-        let existingApp = await this.appModel.findOne({
+
+        const query: any = {
             user: user._id,
             platform: platform._id,
-            hub_id: hub_id,
-            isDeleted: false
-        });
-        console.log(existingApp,"<<<<<<<<<<<<<<<<<========== tại sao lại null")
+            isDeleted: false,
+        };
+
+        if (hub_id) {
+            query['credentials.hub_id'] = hub_id;
+        }
+        // Check for existing app
+        let existingApp = await this.appModel.findOne(query);
 
         // Prepare credentials based on platform
         let credentials;
