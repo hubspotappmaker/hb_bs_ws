@@ -153,7 +153,7 @@ export  class GoogleDriverApplicationService {
         }
 
         if (folder_id) {
-            query['credentials.folder_id'] = folder_id;
+            query['credentials.token.folder_id'] = folder_id;
         }
 
         // Check for existing app

@@ -147,7 +147,7 @@ export class ConnectService {
             from: dto.from,
             to: dto.to,
             name: dto.connectName,
-            isActive: false,
+            isActive: true,
             user: user_id
         })
 
