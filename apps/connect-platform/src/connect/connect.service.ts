@@ -88,6 +88,7 @@ export class ConnectService {
         }
 
 
+
         if (!appFrom)
         {
             throw new NotFoundException("Not found app with id: ", dto.from);
@@ -97,6 +98,23 @@ export class ConnectService {
         {
             throw new NotFoundException("Not found app with id: ", dto.to);
         }
+
+        const oldToken = appTo.credentials;
+
+        const tokenNew = {
+            ...oldToken,
+            hub_id: appFrom.credentials.hub_id,
+        };
+
+
+        await this.appModel.updateOne(
+            { _id: dto.to },
+            {
+                $set: {
+                    'credentials.token': tokenNew,
+                },
+            },
+        );
 
         if (dto.from === dto.to)
         {
