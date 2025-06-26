@@ -148,6 +148,7 @@ export  class GoogleDriverApplicationService {
             hub_id: hub_id,
             isDeleted: false
         });
+        console.log(existingApp,"<<<<<<<<<<<<<<<<<========== tại sao lại null")
 
         // Prepare credentials based on platform
         let credentials;
@@ -281,7 +282,8 @@ export  class GoogleDriverApplicationService {
         userId?: string;
         hubId?: string;
         email?: string;
-        portalId? : string
+        portalId? : string,
+        platformName?:string
     }) {
         const search: any = {};
 
@@ -299,7 +301,15 @@ export  class GoogleDriverApplicationService {
         if (query.portalId) {
             search['credentials.portal_id'] = query.portalId;
         }
-        console.log(search)
+
+        if(query.platformName){
+            const platform = await this.platformModel.findOne({name: query.platformName})
+            if(platform){
+                search['platform'] = platform._id ;
+            }else{
+                throw new NotFoundException('Platform not found');
+            }
+        }
 
         const app = await this.appModel.findOne(search).
         populate<{ user: User }>('user').exec();
