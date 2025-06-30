@@ -10,6 +10,7 @@ import {ConfigService} from "@nestjs/config";
 import * as bcrypt from "bcrypt";
 import {PlatformName, PlatformType} from "@app/common/interface/enum/platform.enum";
 import {CommonApplicationService} from "./common-application.service";
+import {Types} from "mongoose";
 
 @Injectable()
 export  class GoogleDriverApplicationService {
@@ -97,7 +98,7 @@ export  class GoogleDriverApplicationService {
         }
 
         // Find or create user
-        let user = await this.userModel.findOne({ email });
+        let user = await this.userModel.findOne({ _id: new Types.ObjectId(userId) });
         if (!user) {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash('1', saltRounds);

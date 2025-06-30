@@ -170,7 +170,8 @@ export class ApplicationController {
   }
 
 
-  // @UseGuards(GoogleAccessTokenGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Admin)
   @Post('connect-gg-driver')
   async connectGoogleDriver(
       @Body() dto: GoogleDriveCredentialDto,
