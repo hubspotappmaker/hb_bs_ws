@@ -11,6 +11,7 @@ import * as bcrypt from "bcrypt";
 import {PlatformName, PlatformType} from "@app/common/interface/enum/platform.enum";
 import {CommonApplicationService} from "./common-application.service";
 import {Types} from "mongoose";
+import axios from "axios";
 
 @Injectable()
 export  class GoogleDriverApplicationService {
@@ -88,7 +89,6 @@ export  class GoogleDriverApplicationService {
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
         let { email, hub_id, installed_date, token, folder_id, app_id, platform_name } = dto;
 
-        // Parse token if it's a string
         if (typeof token === 'string') {
             try {
                 token = JSON.parse(token);
@@ -97,7 +97,6 @@ export  class GoogleDriverApplicationService {
             }
         }
 
-        // Find or create user
         let user = await this.userModel.findOne({ _id: new Types.ObjectId(userId) });
         if (!user) {
             const saltRounds = 10;
@@ -111,10 +110,8 @@ export  class GoogleDriverApplicationService {
             });
         }
 
-        // Handle platform creation/retrieval
         let platform;
         if (platform_name) {
-            // Find specific platform
             platform = await this.platformModel.findOne({ name: platform_name });
             if (!platform) {
                 platform = await this.platformModel.create({
@@ -124,7 +121,6 @@ export  class GoogleDriverApplicationService {
                 });
             }
         } else {
-            // Create both platforms if none specified
             const platforms = [PlatformName.GOOGLE_DRIVE, PlatformName.HUBSPOT];
             const platformPromises = platforms.map(async (platformName) => {
                 let existingPlatform = await this.platformModel.findOne({ name: platformName });
@@ -139,7 +135,7 @@ export  class GoogleDriverApplicationService {
             });
 
             const createdPlatforms = await Promise.all(platformPromises);
-            platform = createdPlatforms[0]; // Use first platform as default
+            platform = createdPlatforms[0];
         }
 
 
@@ -157,10 +153,8 @@ export  class GoogleDriverApplicationService {
             query['credentials.token.folder_id'] = folder_id;
         }
 
-        // Check for existing app
         let existingApp = await this.appModel.findOne(query);
 
-        // Prepare credentials based on platform
         let credentials;
         let appName;
 
@@ -232,7 +226,6 @@ export  class GoogleDriverApplicationService {
 
                         console.log("conn.id: ", conn._id);
 
-                        // Delete related fields
                         const deleteResult = await this.fieldModel.deleteMany({
                             connect: conn._id,
                             user: user._id
@@ -245,9 +238,8 @@ export  class GoogleDriverApplicationService {
                 }
             }
 
-            // Update existing app credentials
             existingApp.credentials = credentials;
-            existingApp.name = appName; // Update name in case platform changed
+            existingApp.name = appName;
             await existingApp.save();
 
             return {
@@ -270,7 +262,6 @@ export  class GoogleDriverApplicationService {
 
             const savedApp = await createdApp.save();
 
-            // Create modules for the app
             const listModule = await this.commonApplicationService.createModuleForApp(
                 savedApp._id,
                 platform._id
@@ -375,6 +366,82 @@ export  class GoogleDriverApplicationService {
                 }
             }
         }
+    }
+
+    async updateCredential(dto){
+
+        let existingPlatform:any = await this.platformModel.findOne({ name: PlatformName.GOOGLE_DRIVE });
+
+        const user:any = await this.userModel.findOne({email:dto.email})
+        const query: any = {
+            user: user._id,
+            platform: existingPlatform._id,
+            isDeleted: false,
+        };
+
+        if (dto.hub_id && dto.platform_name === PlatformName.GOOGLE_DRIVE) {
+            query['credentials.hub_id'] = dto.hub_id;
+        }
+
+
+        let existingApp:any = await this.appModel.findOne(query);
+
+        const credentials = {
+            hub_id :dto.hub_id,
+            email:dto.email,
+            token: {
+                ...dto.token,
+                token_type: 'google_access_token',
+                installed_date: dto.installed_date,
+                folder_id: dto.folder_id
+            },
+            prefix: ''
+        };
+
+        const oldPrefix = existingApp.credentials?.prefix || '';
+        const newPrefix = credentials.prefix || '';
+
+        if (oldPrefix !== newPrefix) {
+            const listConnect = await this.connectModel.find({
+                user: user._id,
+                to: existingApp._id
+            }).exec();
+
+            if (listConnect.length > 0) {
+                console.log("check listConnect: ", listConnect);
+
+                const updatePromises = listConnect.map(async conn => {
+                    // Update connection
+                    await this.connectModel.findByIdAndUpdate(
+                        conn._id,
+                        { syncMetafield: false }
+                    ).exec();
+
+                    console.log("conn.id: ", conn._id);
+
+                    const deleteResult = await this.fieldModel.deleteMany({
+                        connect: conn._id,
+                        user: user._id
+                    });
+
+                    console.log("check deleteResult: ", deleteResult);
+                });
+
+                await Promise.all(updatePromises);
+            }
+        }
+
+
+        existingApp.credentials = credentials;
+        await existingApp.save();
+
+        return {
+            message: `updated successfully`,
+            app: existingApp,
+            hub_id:dto.hub_id,
+            email: user.email,
+            platform: PlatformName.GOOGLE_DRIVE
+        };
     }
 
 }
