@@ -131,7 +131,7 @@ export  class GoogleDriverApplicationService {
                     existingPlatform = await this.platformModel.create({
                         name: platformName,
                         baseUrl: 'url',
-                        type: PlatformName.GOOGLE_DRIVE ? PlatformType.ECOMMERCE : PlatformType.CRM
+                        type: platformName === PlatformName.GOOGLE_DRIVE ? PlatformType.ECOMMERCE : PlatformType.CRM
                     });
                 }
                 return existingPlatform;
@@ -327,6 +327,8 @@ export  class GoogleDriverApplicationService {
         if (!app) {
             throw new NotFoundException('App not found with provided criteria');
         }
+
+        const connection = await this.connectModel.findOne()
 
         const data = app.toObject()
         return {

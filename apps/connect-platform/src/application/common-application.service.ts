@@ -83,12 +83,14 @@ export class CommonApplicationService {
 
     async softDeleteApp(app_id: string, user_id: string) {
         const filter = {
-            user: user_id,
+            user:  new Types.ObjectId(user_id),
             isDeleted: false,
-            _id: app_id
+            _id: new Types.ObjectId(app_id)
         };
+        console.log(filter,"filter khi xoa")
 
         const appPoint = await this.appModel.findOne(filter);
+
         if (appPoint?.isActive)
         {
             throw new BadRequestException("This source is currently part of a connection and cannot be deleted. Please remove all connections involving this source before attempting deletion.");
@@ -111,10 +113,8 @@ export class CommonApplicationService {
             isDeleted: false,
         };
 
-        console.log(filter,"filter")
 
-
-
+        // console.log(applicationFilterDto)
         if (platform)
         {
             const platformExist = await this.platformModel.findOne({ type: platform });
