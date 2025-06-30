@@ -271,7 +271,7 @@ export class ConnectService {
         const platTo = exitsConnect.to.platform.name
 
         const fromAppId = exitsConnect.from._id.toString();
-        const toAppId = exitsConnect.from._id.toString();
+        const toAppId = exitsConnect.to._id.toString();
         if (platform === PlatformName.SHOPIFY && platTo === PlatformName.HUBSPOT)
         {
             await this.connectWebhookService.destructionWebhookShopify(fromAppId);
@@ -335,6 +335,11 @@ export class ConnectService {
             //create webhook
             await this.connectWebhookService.createWebhookShopify(fromAppId, toAppId, connect_id);
         }
+
+        await this.appModel.updateMany(
+            { _id: { $in: [ new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
+            { $set: { isActive: true } }
+        )
 
 
         exitsConnect.isActive = true;
