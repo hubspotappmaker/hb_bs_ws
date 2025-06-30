@@ -363,7 +363,7 @@ export  class GoogleDriverApplicationService {
 
 
         if(!existingApp){
-            throw new BadRequestException('Người dùng chưa kết nối hubspot')
+            return { hub_id: null }
         }else {
             console.log(existingApp)
             if (!existingApp.credentials?.hub_id) {

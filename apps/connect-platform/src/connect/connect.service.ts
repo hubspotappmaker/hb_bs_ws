@@ -278,6 +278,8 @@ export class ConnectService {
 
 
         exitsConnect.isActive = false;
+
+
         await exitsConnect.save();
 
         return exitsConnect;
