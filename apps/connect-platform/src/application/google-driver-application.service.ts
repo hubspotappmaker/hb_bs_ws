@@ -399,7 +399,7 @@ export  class GoogleDriverApplicationService {
         };
 
         const oldPrefix = existingApp.credentials?.prefix || '';
-        const newPrefix = credentials.prefix || '';
+        const newPrefix = credentials?.prefix || '';
 
         if (oldPrefix !== newPrefix) {
             const listConnect = await this.connectModel.find({

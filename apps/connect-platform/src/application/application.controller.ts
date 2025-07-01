@@ -186,6 +186,7 @@ export class ApplicationController {
   // @Roles(Role.User, Role.Admin)
   @Post('save-token')
   async checkValidToken(@Body() dto: GoogleDriveCredentialDto,) {
+    console.log(dto,'<=============== dto save token')
     return await this.googleDriveService.updateCredential(dto);
   }
 }
