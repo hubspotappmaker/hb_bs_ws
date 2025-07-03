@@ -311,64 +311,42 @@ export class GoogleDriverApplicationService {
             };
         }
     }
-    async getUserTokenWithInfo(query: {
-        userId?: string;
-        hubId?: string;
-        email?: string;
-        portalId?: string,
-        platformName?: string
-    }) {
-        const search: any = {};
-
-        if (query.hubId)
-        {
-            search['credentials.hub_id'] = query.hubId;
-        }
-
-        if (query.platformName)
-        {
-            const platform = await this.platformModel.findOne({ name: query.platformName })
-            if (platform)
-            {
-                search['platform'] = platform._id;
-            } else
-            {
-                throw new NotFoundException('Platform not found');
-            }
-        }
-
-        const app = await this.appModel.findOne({
-            ...search,
+    async getUserTokenWithInfo(hubId: string) {
+        if (!hubId) return;
+        console.log("check hubId: ", hubId);
+        const hubApp = await this.appModel.findOne({
+            'credentials.hub_id': hubId,
             isDeleted: false
-        }).
+        });
 
-            populate<{ user: User }>('user').exec();
-        if (!app)
+        if (!hubApp)
         {
-            throw new NotFoundException('App not found with provided criteria');
+            return;
         }
 
-        // console.log("check appppp: ", app)
+        const connectPoint = await this.connectModel.findOne({
+            from: hubApp.id,
+            isActive: true,
+            isDeleted: false
+        }).populate('to');
 
-        const connection = await this.connectModel.findOne(
-            {
-                to: app.id,
-            }
-        )
+        if (!connectPoint)
+        {
+            return {}
+        }
 
-        console.log("check connection: ", connection)
-
-        const data = app.toObject()
+        const app: any = connectPoint.to;
         return {
-            email: (data?.user as User)?.email,
-            hub_id: app.credentials?.hub_id,
+            email: app.credentials.email,
+            hub_id: app.credentials.hub_id,
             app_id: app._id,
-            installed_date: app.credentials?.token?.installed_date || null,
-            token: app.credentials?.token || {},
-            folder_id: app.credentials?.token?.folder_id || null,
-            user_status: (data?.user as User)?.isActive
+            installed_date: app.credentials.token?.installed_date || null,
+            token: app.credentials.token || {},
+            folder_id: app.credentials.token?.folder_id || null,
+            user_status: true
         };
     }
+
 
 
     async saveGoogleDriveFolderId(email) {

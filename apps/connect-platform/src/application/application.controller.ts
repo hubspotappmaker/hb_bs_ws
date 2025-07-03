@@ -53,10 +53,9 @@ export class ApplicationController {
   @Get('get-user-info')
   @ApiQuery({ name: 'hubId', required: false, type: String })
   async getTokenWithUserInfo(
-    @Query('hubId') hubId?: string,
+    @Query('hubId') hubId: string,
   ) {
-    const query = { hubId };
-    return this.googleDriveService.getUserTokenWithInfo(query);
+    return this.googleDriveService.getUserTokenWithInfo(hubId);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
