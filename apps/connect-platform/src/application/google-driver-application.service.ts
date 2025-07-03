@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { HttpService } from "@nestjs/axios";
 import { google } from 'googleapis';
@@ -187,6 +187,20 @@ export class GoogleDriverApplicationService {
                 break;
 
             case 'hubspot':
+                const appChecker = await this.appModel.findOne({
+                    'credentials.hub_id': hub_id,
+                    isDeleted: false
+                })
+
+                console.log("check appChecker: ", appChecker);
+
+                if (appChecker)
+                {
+                    if (appChecker?.user != user.id)
+                    {
+                        throw new ConflictException("This hubspot account is used!");
+                    }
+                }
                 credentials = {
                     hub_id: hub_id,
                     refresh_token: token?.refresh_token,
@@ -306,23 +320,9 @@ export class GoogleDriverApplicationService {
     }) {
         const search: any = {};
 
-        if (query.userId)
-        {
-            search.user = query.userId;
-        }
-
         if (query.hubId)
         {
             search['credentials.hub_id'] = query.hubId;
-        }
-
-        if (query.email)
-        {
-            search['credentials.email'] = query.email;
-        }
-        if (query.portalId)
-        {
-            search['credentials.hub_id'] = query.portalId;
         }
 
         if (query.platformName)
@@ -337,8 +337,6 @@ export class GoogleDriverApplicationService {
             }
         }
 
-        console.log(search)
-
         const app = await this.appModel.findOne({
             ...search,
             isDeleted: false
@@ -350,9 +348,15 @@ export class GoogleDriverApplicationService {
             throw new NotFoundException('App not found with provided criteria');
         }
 
-        console.log("check appppp: ", app)
+        // console.log("check appppp: ", app)
 
-        const connection = await this.connectModel.findOne()
+        const connection = await this.connectModel.findOne(
+            {
+                to: app.id,
+            }
+        )
+
+        console.log("check connection: ", connection)
 
         const data = app.toObject()
         return {

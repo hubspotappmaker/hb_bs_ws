@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Res, BadRequestException, InternalServerErrorException, NotFoundException, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Res, BadRequestException, InternalServerErrorException, NotFoundException, HttpException, HttpStatus, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { lastValueFrom, Observable } from 'rxjs';
 import { App, Field, Platform, User } from '@app/common';
@@ -26,8 +26,25 @@ export class HubspotApplicationService {
   ) { }
 
   async connectHubspot(code: any, state: any) {
-    console.log(code,state)
-    const { user_id, prefix, portalId,email,fullName } = JSON.parse(state)
+    console.log("da in so to ")
+    const { user_id, prefix, portalId, email, fullName } = JSON.parse(state)
+
+    const appChecker = await this.appModel.findOne({
+      'credentials.hub_id': portalId,
+      isDeleted: false
+    })
+
+    console.log("check appChecker: ", appChecker);
+
+    if (appChecker)
+    {
+      if (appChecker?.user != user_id)
+      {
+        throw new ConflictException("This hubspot account is used!");
+      }
+    }
+
+
 
     const proPrifix: string = prefix;
 
@@ -118,9 +135,11 @@ export class HubspotApplicationService {
         platform: platform._id,
         name: `Hubspot[${portalId}]`,
         user: user_id,
-        credentials: { portalId,
+        credentials: {
+          portalId,
           // refresh_token, access_token,
-          email, fullName, prefix },
+          email, fullName, prefix
+        },
       });
 
       const pointApp = await createdApp.save();
@@ -132,7 +151,7 @@ export class HubspotApplicationService {
   }
 
 
-  async  connectGoogleDrive( dto:any ){
+  async connectGoogleDrive(dto: any) {
 
 
   }

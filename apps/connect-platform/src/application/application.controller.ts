@@ -52,16 +52,10 @@ export class ApplicationController {
 
   @Get('get-user-info')
   @ApiQuery({ name: 'hubId', required: false, type: String })
-  @ApiQuery({ name: 'portalId', required: false, type: String })
-  @ApiQuery({ name: 'email', required: false, type: String })
-  @ApiQuery({ name: 'platformName', required: false, type: String })
   async getTokenWithUserInfo(
     @Query('hubId') hubId?: string,
-    @Query('email') email?: string,
-    @Query('portalId') portalId?: string,
-    @Query('platformName') platformName?: string,
   ) {
-    const query = { hubId, email, portalId, platformName };
+    const query = { hubId };
     return this.googleDriveService.getUserTokenWithInfo(query);
   }
 
@@ -99,7 +93,7 @@ export class ApplicationController {
     @Query('state') state: any,
     @Res() res: Response,
   ) {
-    console.log('chekc state: ', state);
+    console.log("run install hubspot")
     await this.hubspotApplicationService.connectHubspot(code, state);
     res.redirect(`${process.env.CORS_ORIGIN}/home`);
   }
@@ -172,7 +166,7 @@ export class ApplicationController {
     @Body() dto: GoogleDriveCredentialDto,
     @AuthUser('sub') userId: string,
   ) {
-    console.log("check dto save token: ", dto)
+    console.log("run install connectGoogleDriver")
     return this.googleDriveService.connectGoogleDrive(dto, userId);
   }
 
