@@ -10,7 +10,7 @@ import { ConnectWebhookService } from './connect-webhook.service';
 import { PlatformName } from '@app/common/interface/enum/platform.enum';
 import { ShopifyApplicationService } from '../application/shopify-application.service';
 import { HubspotApplicationService } from '../application/hubspot-application.service';
-import {Types} from "mongoose";
+import { Types } from "mongoose";
 
 @Injectable()
 export class ConnectService {
@@ -26,7 +26,7 @@ export class ConnectService {
         console.log("check paginationDto: ", JSON.stringify(paginationDto));
         const { page, limit } = paginationDto;
 
-        const filter:any = {
+        const filter: any = {
             user: new Types.ObjectId(user_id).toString(),
             isDeleted: false,
         };
@@ -147,7 +147,7 @@ export class ConnectService {
             from: dto.from,
             to: dto.to,
             name: dto.connectName,
-            isActive: true,
+            isActive: false,
             user: user_id
         })
 
@@ -281,7 +281,7 @@ export class ConnectService {
         exitsConnect.isActive = false;
 
         await this.appModel.updateMany(
-            { _id: { $in: [ new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
+            { _id: { $in: [new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
             { $set: { isActive: false } }
         )
         await exitsConnect.save();
@@ -325,6 +325,16 @@ export class ConnectService {
         //@ts-ignore
         const hubspotAppID: string = exitsConnect.to.id;
 
+        const listConnect = await this.connectModel.find({
+            from: fromAppId,
+            isActive: true
+        })
+
+        if (listConnect.length > 0)
+        {
+            throw new BadRequestException("Please disable exist connect to enable");
+        }
+        console.log("check list connect enable: ", listConnect);
 
         if (platform === PlatformName.SHOPIFY && platTo === PlatformName.HUBSPOT)
         {
@@ -337,7 +347,7 @@ export class ConnectService {
         }
 
         await this.appModel.updateMany(
-            { _id: { $in: [ new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
+            { _id: { $in: [new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
             { $set: { isActive: true } }
         )
 
