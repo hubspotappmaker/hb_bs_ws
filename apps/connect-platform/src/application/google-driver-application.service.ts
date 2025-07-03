@@ -1,20 +1,20 @@
-import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
-import {InjectModel} from "@nestjs/mongoose";
-import {HttpService} from "@nestjs/axios";
-import {google} from 'googleapis';
-import {App, Field, Platform, User} from "@app/common";
-import {SoftDeleteModel} from "soft-delete-plugin-mongoose";
-import {Connect} from "@app/common/schemas/connect.schema";
-import {GoogleDriveCredentialDto} from "@app/common/interface/dto/application/application.filter.sto";
-import {ConfigService} from "@nestjs/config";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { HttpService } from "@nestjs/axios";
+import { google } from 'googleapis';
+import { App, Field, Platform, User } from "@app/common";
+import { SoftDeleteModel } from "soft-delete-plugin-mongoose";
+import { Connect } from "@app/common/schemas/connect.schema";
+import { GoogleDriveCredentialDto } from "@app/common/interface/dto/application/application.filter.sto";
+import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
-import {PlatformName, PlatformType} from "@app/common/interface/enum/platform.enum";
-import {CommonApplicationService} from "./common-application.service";
-import {Types} from "mongoose";
+import { PlatformName, PlatformType } from "@app/common/interface/enum/platform.enum";
+import { CommonApplicationService } from "./common-application.service";
+import { Types } from "mongoose";
 import axios from "axios";
 
 @Injectable()
-export  class GoogleDriverApplicationService {
+export class GoogleDriverApplicationService {
     private oauth2Client;
 
     constructor(
@@ -41,34 +41,35 @@ export  class GoogleDriverApplicationService {
             refresh_token: string;
             expiry_date: number;
         }) {
-        const {access_token, refresh_token, expiry_date} = tokenData;
+        const { access_token, refresh_token, expiry_date } = tokenData;
 
         return this.appModel.findOneAndUpdate(
-            {hub_id},
-            {access_token, refresh_token, expiry_date},
-            {upsert: true, new: true},
+            { hub_id },
+            { access_token, refresh_token, expiry_date },
+            { upsert: true, new: true },
         );
     }
 
     async getAuthorizedClient(hub_id: string) {
 
-        const creds = await this.appModel.findOne({hub_id});
+        const creds = await this.appModel.findOne({ hub_id });
         if (!creds) throw new Error('Google credentials not found');
 
         const { access_token, refresh_token, expiry_date } = creds.credentials;
 
-        this.oauth2Client.setCredentials({access_token, refresh_token, expiry_date});
+        this.oauth2Client.setCredentials({ access_token, refresh_token, expiry_date });
 
         const now = Date.now();
-        if (!expiry_date || expiry_date < now + 60000) {
-            const {credentials} = await this.oauth2Client.refreshAccessToken();
+        if (!expiry_date || expiry_date < now + 60000)
+        {
+            const { credentials } = await this.oauth2Client.refreshAccessToken();
             await this.appModel.findOneAndUpdate(
-                {hub_id},
+                { hub_id },
                 {
                     access_token: credentials.access_token,
                     expiry_date: credentials.expiry_date,
                 },
-                {new: true},
+                { new: true },
             );
             this.oauth2Client.setCredentials(credentials);
         }
@@ -78,9 +79,9 @@ export  class GoogleDriverApplicationService {
 
     async saveFolderId(hub_id: string, folder_id: string) {
         return this.appModel.findOneAndUpdate(
-            {hub_id},
-            {drive_root_folder_id: folder_id},
-            {new: true},
+            { hub_id },
+            { drive_root_folder_id: folder_id },
+            { new: true },
         );
     }
 
@@ -89,16 +90,20 @@ export  class GoogleDriverApplicationService {
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
         let { email, hub_id, installed_date, token, folder_id, app_id, platform_name } = dto;
 
-        if (typeof token === 'string') {
-            try {
+        if (typeof token === 'string')
+        {
+            try
+            {
                 token = JSON.parse(token);
-            } catch (e) {
+            } catch (e)
+            {
                 throw new BadRequestException('Invalid token format');
             }
         }
 
         let user = await this.userModel.findOne({ _id: new Types.ObjectId(userId) });
-        if (!user) {
+        if (!user)
+        {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash('1', saltRounds);
 
@@ -111,20 +116,24 @@ export  class GoogleDriverApplicationService {
         }
 
         let platform;
-        if (platform_name) {
+        if (platform_name)
+        {
             platform = await this.platformModel.findOne({ name: platform_name });
-            if (!platform) {
+            if (!platform)
+            {
                 platform = await this.platformModel.create({
                     name: platform_name,
                     baseUrl: 'url',
                     type: PlatformType.CRM
                 });
             }
-        } else {
+        } else
+        {
             const platforms = [PlatformName.GOOGLE_DRIVE, PlatformName.HUBSPOT];
             const platformPromises = platforms.map(async (platformName) => {
                 let existingPlatform = await this.platformModel.findOne({ name: platformName });
-                if (!existingPlatform) {
+                if (!existingPlatform)
+                {
                     existingPlatform = await this.platformModel.create({
                         name: platformName,
                         baseUrl: 'url',
@@ -145,11 +154,13 @@ export  class GoogleDriverApplicationService {
             isDeleted: false,
         };
 
-        if (hub_id && platform_name === PlatformName.HUBSPOT) {
+        if (hub_id && platform_name === PlatformName.HUBSPOT)
+        {
             query['credentials.hub_id'] = hub_id;
         }
 
-        if (folder_id) {
+        if (folder_id)
+        {
             query['credentials.token.folder_id'] = folder_id;
         }
 
@@ -158,7 +169,8 @@ export  class GoogleDriverApplicationService {
         let credentials;
         let appName;
 
-        switch (platform.name.toLowerCase()) {
+        switch (platform.name.toLowerCase())
+        {
             case 'google_drive':
                 credentials = {
                     hub_id,
@@ -202,19 +214,22 @@ export  class GoogleDriverApplicationService {
                 break;
         }
 
-        if (existingApp) {
+        if (existingApp)
+        {
             console.log(`Đã tìm thấy App tồn tại với user=${user._id} và hub_id=${hub_id} cho platform=${platform.name}, tiến hành UPDATE.`);
 
             const oldPrefix = existingApp.credentials?.prefix || '';
             const newPrefix = credentials.prefix || '';
 
-            if (oldPrefix !== newPrefix) {
+            if (oldPrefix !== newPrefix)
+            {
                 const listConnect = await this.connectModel.find({
                     user: user._id,
                     to: existingApp._id
                 }).exec();
 
-                if (listConnect.length > 0) {
+                if (listConnect.length > 0)
+                {
                     console.log("check listConnect: ", listConnect);
 
                     const updatePromises = listConnect.map(async conn => {
@@ -241,7 +256,7 @@ export  class GoogleDriverApplicationService {
             existingApp.credentials = credentials;
             existingApp.name = appName;
             await existingApp.save();
-
+            console.log("check existingApp: ", existingApp);
             return {
                 message: `${platform.name} updated successfully`,
                 app: existingApp,
@@ -250,7 +265,8 @@ export  class GoogleDriverApplicationService {
                 platform: platform.name
             };
 
-        } else {
+        } else
+        {
             console.log(`Không tìm thấy App với user=${user._id} và hub_id=${hub_id} cho platform=${platform.name}, tiến hành CREATE mới.`);
 
             const createdApp = new this.appModel({
@@ -259,6 +275,8 @@ export  class GoogleDriverApplicationService {
                 user: user._id,
                 credentials: credentials,
             });
+
+            console.log(" check app create new: ", createdApp);
 
             const savedApp = await createdApp.save();
 
@@ -283,54 +301,68 @@ export  class GoogleDriverApplicationService {
         userId?: string;
         hubId?: string;
         email?: string;
-        portalId? : string,
-        platformName?:string
+        portalId?: string,
+        platformName?: string
     }) {
         const search: any = {};
 
-        if (query.userId) {
+        if (query.userId)
+        {
             search.user = query.userId;
         }
 
-        if (query.hubId) {
+        if (query.hubId)
+        {
             search['credentials.hub_id'] = query.hubId;
         }
 
-        if (query.email) {
+        if (query.email)
+        {
             search['credentials.email'] = query.email;
         }
-        if (query.portalId) {
+        if (query.portalId)
+        {
             search['credentials.hub_id'] = query.portalId;
         }
 
-        if(query.platformName){
-            const platform = await this.platformModel.findOne({name: query.platformName})
-            if(platform){
-                search['platform'] = platform._id ;
-            }else{
+        if (query.platformName)
+        {
+            const platform = await this.platformModel.findOne({ name: query.platformName })
+            if (platform)
+            {
+                search['platform'] = platform._id;
+            } else
+            {
                 throw new NotFoundException('Platform not found');
             }
         }
 
         console.log(search)
 
-        const app = await this.appModel.findOne(search).
-        populate<{ user: User }>('user').exec();
-        if (!app) {
+        const app = await this.appModel.findOne({
+            ...search,
+            isDeleted: false
+        }).
+
+            populate<{ user: User }>('user').exec();
+        if (!app)
+        {
             throw new NotFoundException('App not found with provided criteria');
         }
+
+        console.log("check appppp: ", app)
 
         const connection = await this.connectModel.findOne()
 
         const data = app.toObject()
         return {
-            email:(data?.user as User)?.email,
+            email: (data?.user as User)?.email,
             hub_id: app.credentials?.hub_id,
-            app_id:app._id,
-            installed_date:  app.credentials?.token?.installed_date || null,
+            app_id: app._id,
+            installed_date: app.credentials?.token?.installed_date || null,
             token: app.credentials?.token || {},
             folder_id: app.credentials?.token?.folder_id || null,
-            user_status:(data?.user as User)?.isActive
+            user_status: (data?.user as User)?.isActive
         };
     }
 
@@ -338,12 +370,14 @@ export  class GoogleDriverApplicationService {
     async saveGoogleDriveFolderId(email) {
 
         const platform: Platform | any = await this.platformModel.findOne({ name: PlatformName.HUBSPOT });
-        if (!platform) {
+        if (!platform)
+        {
             throw new Error('Không tìm thấy platform Hubspot');
         }
 
         const user: User | any = await this.userModel.findOne({ email: email });
-        if (!user) {
+        if (!user)
+        {
             throw new Error('Không tìm thấy user với email đã cung cấp');
         }
 
@@ -354,13 +388,17 @@ export  class GoogleDriverApplicationService {
         });
 
 
-        if(!existingApp){
+        if (!existingApp)
+        {
             return { hub_id: null }
-        }else {
+        } else
+        {
             console.log(existingApp)
-            if (!existingApp.credentials?.hub_id) {
+            if (!existingApp.credentials?.hub_id)
+            {
                 throw new BadRequestException('Người dùng chưa kết nối hubspot!')
-            } else {
+            } else
+            {
                 return {
                     hub_id: existingApp.credentials?.hub_id
                 }
@@ -368,27 +406,28 @@ export  class GoogleDriverApplicationService {
         }
     }
 
-    async updateCredential(dto){
+    async updateCredential(dto) {
 
-        let existingPlatform:any = await this.platformModel.findOne({ name: PlatformName.GOOGLE_DRIVE });
+        let existingPlatform: any = await this.platformModel.findOne({ name: PlatformName.GOOGLE_DRIVE });
 
-        const user:any = await this.userModel.findOne({email:dto.email})
+        const user: any = await this.userModel.findOne({ email: dto.email })
         const query: any = {
             user: user._id,
             platform: existingPlatform._id,
             isDeleted: false,
         };
 
-        if (dto.hub_id && dto.platform_name === PlatformName.GOOGLE_DRIVE) {
+        if (dto.hub_id && dto.platform_name === PlatformName.GOOGLE_DRIVE)
+        {
             query['credentials.hub_id'] = dto.hub_id;
         }
 
 
-        let existingApp:any = await this.appModel.findOne(query);
+        let existingApp: any = await this.appModel.findOne(query);
 
         const credentials = {
-            hub_id :dto.hub_id,
-            email:dto.email,
+            hub_id: dto.hub_id,
+            email: dto.email,
             token: {
                 ...dto.token,
                 token_type: 'google_access_token',
@@ -401,13 +440,15 @@ export  class GoogleDriverApplicationService {
         const oldPrefix = existingApp.credentials?.prefix || '';
         const newPrefix = credentials?.prefix || '';
 
-        if (oldPrefix !== newPrefix) {
+        if (oldPrefix !== newPrefix)
+        {
             const listConnect = await this.connectModel.find({
                 user: user._id,
                 to: existingApp._id
             }).exec();
 
-            if (listConnect.length > 0) {
+            if (listConnect.length > 0)
+            {
                 console.log("check listConnect: ", listConnect);
 
                 const updatePromises = listConnect.map(async conn => {
@@ -438,7 +479,7 @@ export  class GoogleDriverApplicationService {
         return {
             message: `updated successfully`,
             app: existingApp,
-            hub_id:dto.hub_id,
+            hub_id: dto.hub_id,
             email: user.email,
             platform: PlatformName.GOOGLE_DRIVE
         };

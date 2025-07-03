@@ -37,7 +37,7 @@ export class ApplicationController {
     private readonly hubspotApplicationService: HubspotApplicationService,
     private readonly commonApplicationService: CommonApplicationService,
     private readonly googleDriveService: GoogleDriverApplicationService,
-  ) {}
+  ) { }
 
   @Get('connect_google')
   async connectGoogle(
@@ -172,6 +172,7 @@ export class ApplicationController {
     @Body() dto: GoogleDriveCredentialDto,
     @AuthUser('sub') userId: string,
   ) {
+    console.log("check dto save token: ", dto)
     return this.googleDriveService.connectGoogleDrive(dto, userId);
   }
 
@@ -186,7 +187,7 @@ export class ApplicationController {
   // @Roles(Role.User, Role.Admin)
   @Post('save-token')
   async checkValidToken(@Body() dto: GoogleDriveCredentialDto,) {
-    console.log(dto,'<=============== dto save token')
+    console.log(dto, '<=============== dto save token')
     return await this.googleDriveService.updateCredential(dto);
   }
 }
