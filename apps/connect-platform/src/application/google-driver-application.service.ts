@@ -11,7 +11,7 @@ import * as bcrypt from "bcrypt";
 import { PlatformName, PlatformType } from "@app/common/interface/enum/platform.enum";
 import { CommonApplicationService } from "./common-application.service";
 import { Types } from "mongoose";
-import axios from "axios";
+
 
 @Injectable()
 export class GoogleDriverApplicationService {
@@ -316,20 +316,25 @@ export class GoogleDriverApplicationService {
         console.log("check hubId: ", hubId);
         const hubApp = await this.appModel.findOne({
             'credentials.hub_id': hubId,
-            isDeleted: false
+            isDeleted: false,
+            platform: new Types.ObjectId("685e14ef65837eed8865d8ff"),
         });
+
+
 
         if (!hubApp)
         {
             return;
         }
 
+        console.log("check hubApp: ", hubApp);
+
         const connectPoint = await this.connectModel.findOne({
             from: hubApp.id,
             isActive: true,
             isDeleted: false
         }).populate('to');
-
+        console.log("check connectPoint: ", connectPoint)
         if (!connectPoint)
         {
             return {}
