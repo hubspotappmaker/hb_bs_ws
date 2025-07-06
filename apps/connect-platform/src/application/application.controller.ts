@@ -165,7 +165,7 @@ export class ApplicationController {
     @Body() dto: GoogleDriveCredentialDto,
     @AuthUser('sub') userId: string,
   ) {
-    console.log("run install connectGoogleDriver")
+    console.log("run install connectGoogleDriver dto.:  ", dto)
     return this.googleDriveService.connectGoogleDrive(dto, userId);
   }
 

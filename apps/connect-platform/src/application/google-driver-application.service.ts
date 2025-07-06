@@ -89,7 +89,7 @@ export class GoogleDriverApplicationService {
 
     async connectGoogleDrive(dto: GoogleDriveCredentialDto, userId: string) {
         let { email, hub_id, installed_date, token, folder_id, app_id, platform_name } = dto;
-
+        console.log("check func istall gdrive: ", token);
         if (typeof token === 'string')
         {
             try
