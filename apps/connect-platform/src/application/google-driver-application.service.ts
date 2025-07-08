@@ -393,83 +393,53 @@ export class GoogleDriverApplicationService {
         }
     }
 
-    async updateCredential(dto) {
-
-        let existingPlatform: any = await this.platformModel.findOne({ name: PlatformName.GOOGLE_DRIVE });
-
-        const user: any = await this.userModel.findOne({ email: dto.email })
-        const query: any = {
-            user: user._id,
-            platform: existingPlatform._id,
+    async updateCredential(dto: GoogleDriveCredentialDto) {
+        const { hub_id } = dto
+        if (!hub_id) return;
+        console.log("check hubId: ", hub_id);
+        const hubApp = await this.appModel.findOne({
+            'credentials.hub_id': hub_id,
             isDeleted: false,
-        };
+            platform: new Types.ObjectId("685e14ef65837eed8865d8ff"),
+        });
 
-        if (dto.hub_id && dto.platform_name === PlatformName.GOOGLE_DRIVE)
+
+
+        if (!hubApp)
         {
-            query['credentials.hub_id'] = dto.hub_id;
+            return;
         }
 
+        console.log("check hubApp: ", hubApp);
 
-        let existingApp: any = await this.appModel.findOne(query);
+        const connectPoint = await this.connectModel.findOne({
+            from: hubApp.id,
+            isActive: true,
+            isDeleted: false
+        }).populate('to');
+        console.log("check connectPoint: ", connectPoint)
 
-        const credentials = {
-            hub_id: dto.hub_id,
-            email: dto.email,
-            token: {
-                ...dto.token,
-                token_type: 'google_access_token',
-                installed_date: dto.installed_date,
-                folder_id: dto.folder_id
-            },
-            prefix: ''
-        };
 
-        const oldPrefix = existingApp.credentials?.prefix || '';
-        const newPrefix = credentials?.prefix || '';
 
-        if (oldPrefix !== newPrefix)
+        if (!connectPoint)
         {
-            const listConnect = await this.connectModel.find({
-                user: user._id,
-                to: existingApp._id
-            }).exec();
-
-            if (listConnect.length > 0)
-            {
-                console.log("check listConnect: ", listConnect);
-
-                const updatePromises = listConnect.map(async conn => {
-                    // Update connection
-                    await this.connectModel.findByIdAndUpdate(
-                        conn._id,
-                        { syncMetafield: false }
-                    ).exec();
-
-                    console.log("conn.id: ", conn._id);
-
-                    const deleteResult = await this.fieldModel.deleteMany({
-                        connect: conn._id,
-                        user: user._id
-                    });
-
-                    console.log("check deleteResult: ", deleteResult);
-                });
-
-                await Promise.all(updatePromises);
-            }
+            return {}
         }
 
+        if (connectPoint.to)
+        {
+            console.log("check to app: ", connectPoint.to);
+        }
 
-        existingApp.credentials = credentials;
-        await existingApp.save();
+        const updateApp = connectPoint.to as unknown as App;
 
-        return {
-            message: `updated successfully`,
-            app: existingApp,
-            hub_id: dto.hub_id,
-            email: user.email,
-            platform: PlatformName.GOOGLE_DRIVE
-        };
+        updateApp.credentials["token"] = dto.token
+
+        const savedApp = await updateApp.save();
+
+        console.log("check savedAppL: ", savedApp);
+
+
     }
 
 }
