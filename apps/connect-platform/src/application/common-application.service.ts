@@ -8,7 +8,7 @@ import { CommonModuleName } from '@app/common/interface/enum/module.enum';
 import * as jwt from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@app/common/interface/enum/user.enum';
-import mongoose, {Schema, Types} from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 @Injectable()
 export class CommonApplicationService {
 
@@ -48,7 +48,7 @@ export class CommonApplicationService {
                 const payload = {
                     sub: existUser.id,
                     email: email,
-                    role: Role.User,
+                    role: existUser.role,
                     name: display_name
                 };
 
@@ -83,11 +83,11 @@ export class CommonApplicationService {
 
     async softDeleteApp(app_id: string, user_id: string) {
         const filter = {
-            user:  new Types.ObjectId(user_id),
+            user: new Types.ObjectId(user_id),
             isDeleted: false,
             _id: new Types.ObjectId(app_id)
         };
-        console.log(filter,"filter khi xoa")
+        console.log(filter, "filter khi xoa")
 
         const appPoint = await this.appModel.findOne(filter);
 
@@ -108,7 +108,7 @@ export class CommonApplicationService {
 
 
 
-        let filter:any = {
+        let filter: any = {
             user: new Types.ObjectId(user_id),
             isDeleted: false,
         };
@@ -136,7 +136,7 @@ export class CommonApplicationService {
         }
 
         const totalRecord = await this.appModel.countDocuments(filter);
-        console.log(filter,"filter")
+        console.log(filter, "filter")
         const data = await this.appModel
             .find(filter)
             .skip((page - 1) * limit)

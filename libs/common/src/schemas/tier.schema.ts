@@ -16,18 +16,6 @@ export class Tier extends Document {
     @Prop({ required: true })
     appLimit: number;
 
-    @Prop({ required: true })
-    orderSyncLimit: number;
-
-    @Prop({ required: true })
-    productSyncLimit: number;
-
-    @Prop({ required: true })
-    customerSyncLimit: number;
-
-    @Prop({ required: true })
-    metafieldLimit: number;
-
 }
 
 export const TierSchema = SchemaFactory.createForClass(Tier);

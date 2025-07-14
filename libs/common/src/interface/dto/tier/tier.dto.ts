@@ -12,18 +12,6 @@ export class CreateTierDto {
 
     @IsNumber()
     appLimit: number;
-
-    @IsNumber()
-    orderSyncLimit: number;
-
-    @IsNumber()
-    productSyncLimit: number;
-
-    @IsNumber()
-    customerSyncLimit: number;
-
-    @IsNumber()
-    metafieldLimit: number;
 }
 
 export class UpdateTierDto extends PartialType(CreateTierDto) {
