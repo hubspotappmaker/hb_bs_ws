@@ -265,18 +265,8 @@ export class ConnectService {
             throw new NotFoundException('Connect not found');
         }
 
-        //@ts-ignore
-        const platform = exitsConnect.from.platform.name;
-        //@ts-ignore
-        const platTo = exitsConnect.to.platform.name
-
         const fromAppId = exitsConnect.from._id.toString();
         const toAppId = exitsConnect.to._id.toString();
-        if (platform === PlatformName.SHOPIFY && platTo === PlatformName.HUBSPOT)
-        {
-            await this.connectWebhookService.destructionWebhookShopify(fromAppId);
-        }
-
 
         exitsConnect.isActive = false;
 
