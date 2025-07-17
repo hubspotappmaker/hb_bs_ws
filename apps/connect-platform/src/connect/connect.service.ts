@@ -1,9 +1,9 @@
-import { App } from '@app/common';
+import { App, User } from '@app/common';
 import { CreateConnectDto, UpdateConnectDto } from '@app/common/interface/dto/common/connect.dto';
 import { PaginationDto } from '@app/common/interface/dto/common/pagination.dto';
 import { PaginationResponse } from '@app/common/interface/response/pagination.response';
 import { Connect } from '@app/common/schemas/connect.schema';
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { ConnectWebhookService } from './connect-webhook.service';
@@ -17,6 +17,7 @@ export class ConnectService {
     constructor(
         @InjectModel(Connect.name) private connectModel: SoftDeleteModel<Connect>,
         @InjectModel(App.name) private appModel: SoftDeleteModel<App>,
+        @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
         private readonly connectWebhookService: ConnectWebhookService,
         private readonly shopifyApplicationService: ShopifyApplicationService,
         private readonly hubspotApplicationService: HubspotApplicationService
@@ -70,7 +71,32 @@ export class ConnectService {
     }
 
     async createNewConnect(dto: CreateConnectDto, user_id: string) {
+        const me = await this.userModel.findOne({
+            _id: user_id
+        })
+            .populate('tier')
+            .exec();
 
+        if (!me)
+        {
+            throw new NotFoundException("User not found");
+        }
+
+        //@ts-ignore
+        const connectLimit = me.tier.connectLimit || 0;
+
+        const totalConnect = await this.connectModel.countDocuments({
+            user: user_id,
+            isDeleted: false
+        });
+
+
+        if (totalConnect >= connectLimit)
+        {
+            throw new HttpException(`You have reached the limit of ${connectLimit} connections for your tier. Please upgrade your plan!`, 402);
+        }
+
+        console.log('check total connect: ', totalConnect)
         const appFrom = await this.appModel.findOne({
             _id: dto.from
         }).exec()

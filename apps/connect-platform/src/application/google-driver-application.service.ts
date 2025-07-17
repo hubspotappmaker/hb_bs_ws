@@ -12,7 +12,7 @@ import { PlatformName, PlatformType } from "@app/common/interface/enum/platform.
 import { CommonApplicationService } from "./common-application.service";
 import { Types } from "mongoose";
 import { lastValueFrom } from "rxjs";
-
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class GoogleDriverApplicationService {
@@ -20,6 +20,7 @@ export class GoogleDriverApplicationService {
     private readonly GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private readonly CLIENT_ID = process.env.GDRIVE_ID || "";
     private readonly CLIENT_SECRET = process.env.GDRIVE_SECRET || '';
+    private readonly SECRET_KEY = '16B25C72F39B83F133F74C8F1F77A1025F3D1B2A6C3D7F8F92C8F31F84A7086';
 
     constructor(
         @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
@@ -37,6 +38,12 @@ export class GoogleDriverApplicationService {
             this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
             this.configService.get<string>('GOOGLE_REDIRECT_URI'),
         );
+    }
+
+    encrypt(key: string, data: string): string {
+        const hmac = createHmac('sha256', key);
+        hmac.update(data);
+        return hmac.digest('hex');
     }
 
     async saveTokens(
@@ -316,101 +323,109 @@ export class GoogleDriverApplicationService {
         }
     }
     async getUserTokenWithInfo(hubId: string) {
-        if (!hubId) return;
-        console.log("check hubId: ", hubId);
-        const hubApp = await this.appModel.findOne({
-            'credentials.hub_id': hubId,
-            isDeleted: false,
-            platform: new Types.ObjectId("686f6896c4132a30126636af"),
-        });
-
-
-
-        if (!hubApp)
+        try
         {
-            return;
-        }
-
-        console.log("check hubApp: ", hubApp);
-
-        const connectPoint = await this.connectModel.findOne({
-            from: hubApp.id,
-            isActive: true,
-            isDeleted: false
-        }).populate('to')
-            .populate('user');
-
-
-        if (!connectPoint)
-        {
-            return {}
-        }
-
-        //@ts-ignore
-        console.log("check connectPoint user: ", connectPoint.user.isActive)
-
-        //@ts-ignore
-        if (!connectPoint.user.isActive)
-        {
-            return {}
-        }
+            if (!hubId) return;
+            console.log("check hubId: ", hubId);
+            const hubApp = await this.appModel.findOne({
+                'credentials.hub_id': hubId,
+                isDeleted: false,
+                platform: new Types.ObjectId("686f6896c4132a30126636af"),
+            });
 
 
 
-        const app: any = connectPoint.to;
-        console.log("check install date: ", app.credentials.token?.installed_date);
-        console.log("check date now: ", new Date().toISOString());
-        const tokenInfo = app.credentials.token || {};
-        const installedDateStr = tokenInfo.installed_date;
-        const now = new Date();
-
-        if (installedDateStr)
-        {
-            const installedDate = new Date(installedDateStr);
-            const diffMs = now.getTime() - installedDate.getTime();
-            const diffMinutes = diffMs / 1000 / 60;
-
-            console.log("check install date: ", installedDateStr);
-            console.log("check date now: ", now.toISOString());
-            console.log(`Diff minutes: ${diffMinutes}`);
-
-            if (diffMinutes > 50)
+            if (!hubApp)
             {
-                // Chuẩn bị payload cho request refresh
-                const params = new URLSearchParams();
-                params.append('client_id', this.CLIENT_ID);
-                params.append('client_secret', this.CLIENT_SECRET);
-                params.append('refresh_token', tokenInfo.refresh_token);
-                params.append('grant_type', 'refresh_token');
-
-                // Gọi API
-                const response = await lastValueFrom(
-                    this.httpService.post(this.GOOGLE_TOKEN_URL, params.toString(), {
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    })
-                );
-
-                const data = response.data;
-                console.log('Google refresh response:', data);
-
-                // Cập nhật token mới và thời điểm cấp
-                tokenInfo.access_token = data.access_token;
-                tokenInfo.expires_in = data.expires_in;
-                tokenInfo.installed_date = now.toISOString();
-
-                // Lưu lại vào DB
-                await app.save();
+                return;
             }
+
+            console.log("check hubApp: ", hubApp);
+
+            const connectPoint = await this.connectModel.findOne({
+                from: hubApp.id,
+                isActive: true,
+                isDeleted: false
+            }).populate('to')
+                .populate('user');
+
+
+            if (!connectPoint)
+            {
+                return {}
+            }
+
+            //@ts-ignore
+            console.log("check connectPoint user: ", connectPoint.user.isActive)
+
+            //@ts-ignore
+            if (!connectPoint.user.isActive)
+            {
+                return {}
+            }
+
+
+
+            const app: any = connectPoint.to;
+            console.log("check install date: ", app.credentials.token?.installed_date);
+            console.log("check date now: ", new Date().toISOString());
+            const tokenInfo = app.credentials.token || {};
+            const installedDateStr = tokenInfo.installed_date;
+            const now = new Date();
+
+            if (installedDateStr)
+            {
+                const installedDate = new Date(installedDateStr);
+                const diffMs = now.getTime() - installedDate.getTime();
+                const diffMinutes = diffMs / 1000 / 60;
+
+                console.log("check install date: ", installedDateStr);
+                console.log("check date now: ", now.toISOString());
+                console.log(`Diff minutes: ${diffMinutes}`);
+
+                if (diffMinutes > 50)
+                {
+                    // Chuẩn bị payload cho request refresh
+                    const params = new URLSearchParams();
+                    params.append('client_id', this.CLIENT_ID);
+                    params.append('client_secret', this.CLIENT_SECRET);
+                    params.append('refresh_token', tokenInfo.refresh_token);
+                    params.append('grant_type', 'refresh_token');
+
+                    // Gọi API
+                    const response = await lastValueFrom(
+                        this.httpService.post(this.GOOGLE_TOKEN_URL, params.toString(), {
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        })
+                    );
+
+                    const data = response.data;
+                    console.log('Google refresh response:', data);
+
+                    // Cập nhật token mới và thời điểm cấp
+                    tokenInfo.access_token = data.access_token;
+                    tokenInfo.expires_in = data.expires_in;
+                    tokenInfo.installed_date = now.toISOString();
+
+                    // Lưu lại vào DB
+                    await app.save();
+                }
+            }
+
+
+            return {
+                email: app.credentials.email,
+                hub_id: app.credentials.hub_id,
+                app_id: app._id,
+                installed_date: app.credentials.token?.installed_date || null,
+                token: this.encrypt(this.SECRET_KEY, JSON.stringify(app.credentials.token || {})),
+                folder_id: app.credentials.token?.folder_id || null,
+                user_status: true
+            };
+        } catch (error)
+        {
+            throw new NotFoundException("Not found token with this hubspot account!");
         }
-        return {
-            email: app.credentials.email,
-            hub_id: app.credentials.hub_id,
-            app_id: app._id,
-            installed_date: app.credentials.token?.installed_date || null,
-            token: app.credentials.token || {},
-            folder_id: app.credentials.token?.folder_id || null,
-            user_status: true
-        };
     }
 
 
