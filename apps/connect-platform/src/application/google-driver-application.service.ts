@@ -12,7 +12,7 @@ import { PlatformName, PlatformType } from "@app/common/interface/enum/platform.
 import { CommonApplicationService } from "./common-application.service";
 import { Types } from "mongoose";
 import { lastValueFrom } from "rxjs";
-import { createHmac } from 'crypto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class GoogleDriverApplicationService {
@@ -20,7 +20,8 @@ export class GoogleDriverApplicationService {
     private readonly GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private readonly CLIENT_ID = process.env.GDRIVE_ID || "";
     private readonly CLIENT_SECRET = process.env.GDRIVE_SECRET || '';
-    private readonly SECRET_KEY = '16B25C72F39B83F133F74C8F1F77A1025F3D1B2A6C3D7F8F92C8F31F84A7086';
+    private readonly SECRET_KEY = '9f9b663e7993467c964af277fb4f8e61812fa8372927197bd99d6ac25e2d6858';
+
 
     constructor(
         @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
@@ -40,10 +41,24 @@ export class GoogleDriverApplicationService {
         );
     }
 
-    encrypt(key: string, data: string): string {
-        const hmac = createHmac('sha256', key);
-        hmac.update(data);
-        return hmac.digest('hex');
+    encrypt(data: string): string {
+        const iv = crypto.randomBytes(16);
+        const key = Buffer.from(this.SECRET_KEY.padEnd(32, '0').slice(0, 32), 'utf-8');
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        let encrypted = cipher.update(data, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return iv.toString('hex') + ':' + encrypted;
+    }
+
+    decrypt(encryptedData: string): string {
+        const parts = encryptedData.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
+        const key = Buffer.from(this.SECRET_KEY.padEnd(32, '0').slice(0, 32), 'utf-8');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
     }
 
     async saveTokens(
@@ -323,6 +338,7 @@ export class GoogleDriverApplicationService {
         }
     }
     async getUserTokenWithInfo(hubId: string) {
+
         try
         {
             if (!hubId) return;
@@ -418,12 +434,13 @@ export class GoogleDriverApplicationService {
                 hub_id: app.credentials.hub_id,
                 app_id: app._id,
                 installed_date: app.credentials.token?.installed_date || null,
-                token: this.encrypt(this.SECRET_KEY, JSON.stringify(app.credentials.token || {})),
+                token: this.encrypt(JSON.stringify(app.credentials.token || {})),
                 folder_id: app.credentials.token?.folder_id || null,
                 user_status: true
             };
         } catch (error)
         {
+            console.log("check loi: ", error);
             throw new NotFoundException("Not found token with this hubspot account!");
         }
     }
