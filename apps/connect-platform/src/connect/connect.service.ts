@@ -83,7 +83,7 @@ export class ConnectService {
         }
 
         //@ts-ignore
-        const connectLimit = me.tier.connectLimit || 0;
+        const connectLimit = me?.tier?.connectLimit || 0;
 
         const totalConnect = await this.connectModel.countDocuments({
             user: user_id,
@@ -291,15 +291,34 @@ export class ConnectService {
             throw new NotFoundException('Connect not found');
         }
 
-        const fromAppId = exitsConnect.from._id.toString();
-        const toAppId = exitsConnect.to._id.toString();
+        console.log("check exitsConnect: ", exitsConnect);
+
+        const fromAppId = exitsConnect?.from?.id.toString();
+
+        const toAppId = exitsConnect?.to?.id.toString();
+
+        console.log("check fromAppId: ", fromAppId)
+        console.log("check toAppId: ", toAppId)
 
         exitsConnect.isActive = false;
 
-        await this.appModel.updateMany(
-            { _id: { $in: [new Types.ObjectId(fromAppId), new Types.ObjectId(toAppId)] } },
-            { $set: { isActive: false } }
-        )
+        if (fromAppId)
+        {
+            await this.appModel.updateMany(
+                { _id: { $in: [new Types.ObjectId(fromAppId)] } },
+                { $set: { isActive: false } }
+            )
+        }
+
+        if (toAppId)
+        {
+            await this.appModel.updateMany(
+                { _id: { $in: [new Types.ObjectId(toAppId)] } },
+                { $set: { isActive: false } }
+            )
+        }
+
+
         await exitsConnect.save();
 
         return exitsConnect;
