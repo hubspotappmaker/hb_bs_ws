@@ -216,15 +216,14 @@ export class GoogleDriverApplicationService {
                 const appChecker = await this.appModel.findOne({
                     'credentials.hub_id': hub_id,
                     isDeleted: false
-                })
-
-                console.log("check appChecker: ", appChecker);
+                }).populate('user');
 
                 if (appChecker)
                 {
-                    if (appChecker?.user != user.id)
+                    if (appChecker?.user.id != user.id)
                     {
-                        throw new ConflictException("This hubspot account is used!");
+                        //@ts-ignore
+                        throw new ConflictException("This hubspot account is used by: " + appChecker?.user?.email);
                     }
                 }
                 credentials = {
