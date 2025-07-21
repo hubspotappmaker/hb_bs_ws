@@ -26,3 +26,17 @@ export class UpdateConnectDto {
     @Length(5, 30)
     name: string;
 }
+
+export class ChangeSourceConnectDto {
+    @IsMongoId()
+    @IsNotEmpty()
+    id: string;
+
+    @IsMongoId()
+    @IsNotEmpty()
+    from: string;
+
+    @IsMongoId()
+    @IsNotEmpty()
+    to: string;
+}

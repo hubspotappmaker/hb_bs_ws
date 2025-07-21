@@ -1,5 +1,5 @@
 import { App, User } from '@app/common';
-import { CreateConnectDto, UpdateConnectDto } from '@app/common/interface/dto/common/connect.dto';
+import { ChangeSourceConnectDto, CreateConnectDto, UpdateConnectDto } from '@app/common/interface/dto/common/connect.dto';
 import { PaginationDto } from '@app/common/interface/dto/common/pagination.dto';
 import { PaginationResponse } from '@app/common/interface/response/pagination.response';
 import { Connect } from '@app/common/schemas/connect.schema';
@@ -342,6 +342,10 @@ export class ConnectService {
             throw new NotFoundException('Connect not found');
         }
 
+        if (!exitsConnect.from || !exitsConnect.to)
+        {
+            throw new BadRequestException("From source and to source are required!");
+        }
         //@ts-ignore
         const platform = exitsConnect.from.platform.name;
         //@ts-ignore
@@ -412,5 +416,28 @@ export class ConnectService {
         await exitsConnect.save()
     }
 
+    async updateConnect(userId: string, dto: ChangeSourceConnectDto) {
+        const { id, from, to } = dto;
+        const filter = {
+            _id: id,
+            user: userId,
+        };
+
+        const exitsConnect = await this.connectModel.findOne(
+            filter
+        );
+
+        if (!exitsConnect)
+        {
+            throw new NotFoundException("Can not found not exist connect");
+        }
+
+        //@ts-ignore
+        exitsConnect.from = from;
+        //@ts-ignore
+        exitsConnect.to = to;
+
+        return await exitsConnect.save()
+    }
 
 }

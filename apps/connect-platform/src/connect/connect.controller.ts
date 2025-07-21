@@ -6,7 +6,7 @@ import { Role } from '@app/common/interface/enum/user.enum';
 import { AuthGuard } from 'apps/auth/src/guard/auth.guard';
 import { RolesGuard } from 'apps/auth/src/guard/roles.guard';
 import { Request } from 'express';
-import { CreateConnectDto, UpdateConnectDto } from '@app/common/interface/dto/common/connect.dto';
+import { ChangeSourceConnectDto, CreateConnectDto, UpdateConnectDto } from '@app/common/interface/dto/common/connect.dto';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 
 @Controller('connect')
@@ -94,5 +94,17 @@ export class ConnectController {
     const user = req['user'] as any;
 
     return this.connectService.updateConnectName(user.sub, dto);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Admin)
+  @Patch('change-source')
+  async changeSourceConenct(
+    @Body() dto: ChangeSourceConnectDto,
+    @Req() req: Request,
+  ) {
+    const user = req['user'] as any;
+
+    return this.connectService.updateConnect(user.sub, dto);
   }
 }
