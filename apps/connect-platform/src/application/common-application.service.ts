@@ -60,6 +60,7 @@ export class CommonApplicationService {
                 const created = new this.userModel({
                     name: display_name,
                     email: email,
+                    tier: "6875c69a4542710d8819b760",
                     password: `${Math.floor(Math.random() * 4535453524324)} onext`,
                 });
                 const newUser = await created.save();
