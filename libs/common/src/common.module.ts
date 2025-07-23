@@ -34,7 +34,7 @@ export class CommonModule {
             autoCreate: true,
             autoIndex: true,
             connectionFactory: (connection) => {
-              connection.plugin(softDeletePlugin, { overrideMethods: true });
+              connection.plugin(softDeletePlugin, { overrideMethods: false });
               return connection;
             },
           }),

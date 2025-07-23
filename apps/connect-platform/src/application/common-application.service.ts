@@ -11,14 +11,16 @@ import { Role } from '@app/common/interface/enum/user.enum';
 import mongoose, { Schema, Types } from "mongoose";
 import { ConnectModule } from '../connect/connect.module';
 import { Connect } from '@app/common/schemas/connect.schema';
+import { Model } from 'mongoose';
 @Injectable()
 export class CommonApplicationService {
 
     constructor(
         @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
+        @InjectModel(App.name) private readonly appModelOrigin: Model<App>,
         @InjectModel(Platform.name) private readonly platformModel: SoftDeleteModel<Platform>,
         @InjectModel(ModuleApp.name) private readonly moduleModel: SoftDeleteModel<ModuleApp>,
-        @InjectModel(Connect.name) private readonly connectModel: SoftDeleteModel<Connect>,
+        @InjectModel(Connect.name) private readonly connectModel: Model<Connect>,
         @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
         private readonly jwtService: JwtService
     ) { }
@@ -233,17 +235,32 @@ export class CommonApplicationService {
     }
 
     async getConnectByUser(user_id) {
-        return await this.connectModel.find({
+        const deleted = await this.connectModel.find({
+            user: user_id,
+            isDeleted: true
+        }).populate("from").populate("to");
+
+        const current = await this.connectModel.find({
             user: user_id,
             isDeleted: false
         }).populate("from").populate("to");
+
+        const result = deleted.concat(current);
+        return result;
     }
 
     async getAppByUser(user_id: string) {
-        return await this.appModel.find({
+        const deleted = await this.appModelOrigin.find({
+            user: new mongoose.Types.ObjectId(user_id),
+            isDeleted: true
+        })
+        const current = await this.appModelOrigin.find({
             user: new mongoose.Types.ObjectId(user_id),
             isDeleted: false
         })
+
+        const result = deleted.concat(current);
+        return result;
     }
 
 }
