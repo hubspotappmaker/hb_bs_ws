@@ -9,6 +9,8 @@ import * as jwt from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@app/common/interface/enum/user.enum';
 import mongoose, { Schema, Types } from "mongoose";
+import { ConnectModule } from '../connect/connect.module';
+import { Connect } from '@app/common/schemas/connect.schema';
 @Injectable()
 export class CommonApplicationService {
 
@@ -16,6 +18,7 @@ export class CommonApplicationService {
         @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
         @InjectModel(Platform.name) private readonly platformModel: SoftDeleteModel<Platform>,
         @InjectModel(ModuleApp.name) private readonly moduleModel: SoftDeleteModel<ModuleApp>,
+        @InjectModel(Connect.name) private readonly connectModel: SoftDeleteModel<Connect>,
         @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
         private readonly jwtService: JwtService
     ) { }
@@ -227,6 +230,13 @@ export class CommonApplicationService {
         appPoint.name = name;
 
         appPoint.save();
+    }
+
+    async getConnectByUser(user_id) {
+        return await this.connectModel.find({
+            user: user_id,
+            isDeleted: false
+        }).populate("from").populate("to");
     }
 
 }

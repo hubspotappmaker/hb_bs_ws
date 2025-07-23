@@ -130,6 +130,15 @@ export class ApplicationController {
     );
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Get('get-connection-by-user/:id')
+  async getConnectionByUser(
+    @Param("id") id: string
+  ) {
+    return this.commonApplicationService.getConnectByUser(id);
+  }
+
   // @UseGuards(AuthGuard, RolesGuard)
   // @Roles(Role.User, Role.Admin)
   // @Get(':id')
