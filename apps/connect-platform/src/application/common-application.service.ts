@@ -239,4 +239,11 @@ export class CommonApplicationService {
         }).populate("from").populate("to");
     }
 
+    async getAppByUser(user_id) {
+        return await this.appModel.find({
+            user: user_id,
+            isDeleted: false
+        })
+    }
+
 }
