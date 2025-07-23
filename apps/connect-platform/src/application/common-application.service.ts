@@ -239,9 +239,9 @@ export class CommonApplicationService {
         }).populate("from").populate("to");
     }
 
-    async getAppByUser(user_id) {
+    async getAppByUser(user_id: string) {
         return await this.appModel.find({
-            user: user_id,
+            user: new mongoose.Types.ObjectId(user_id),
             isDeleted: false
         })
     }
