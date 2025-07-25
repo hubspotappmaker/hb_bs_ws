@@ -4,6 +4,7 @@ import { PaginationResponse } from '@app/common/interface/response/pagination.re
 import { Tier } from '@app/common/schemas/tier.schema';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
 @Injectable()
@@ -46,6 +47,7 @@ export class UserService {
         const { page, limit } = paginationDto;
 
         const filter: Record<string, any> = {
+            "credentials.token_type": "hubspot_access_token"
         };
 
         const totalRecord = await this.appModel.countDocuments(filter);

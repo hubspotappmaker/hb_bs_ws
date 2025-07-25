@@ -432,10 +432,70 @@ export class ConnectService {
             throw new NotFoundException("Can not found not exist connect");
         }
 
+        const oldConnectFrom = await this.connectModel.find({
+            from: exitsConnect.from,
+            isActive: true
+        });
+
+        if (oldConnectFrom.length <= 1)
+        {
+            const oldFrom = await this.appModel.findOne({
+                _id: exitsConnect.from
+            });
+
+            if (oldFrom)
+            {
+                oldFrom.isActive = false;
+                await oldFrom.save()
+            }
+
+        }
+
+        const oldConnectTo = await this.connectModel.find({
+            to: exitsConnect.to,
+            isActive: true
+        });
+
+        if (oldConnectTo.length <= 1)
+        {
+            const oldTo = await this.appModel.findOne({
+                _id: exitsConnect.to
+            });
+
+            if (oldTo)
+            {
+                oldTo.isActive = false;
+                await oldTo.save()
+            }
+        }
+
         //@ts-ignore
         exitsConnect.from = from;
         //@ts-ignore
         exitsConnect.to = to;
+
+        //handle status
+        const currentFrom = await this.appModel.findOne({
+            _id: from
+        });
+
+        const currentTo = await this.appModel.findOne({
+            _id: to
+        });
+
+        if (currentFrom)
+        {
+            currentFrom.isActive = true;
+            await currentFrom.save();
+        }
+
+        if (currentTo)
+        {
+            currentTo.isActive = true;
+            await currentTo.save();
+        }
+
+
 
         return await exitsConnect.save()
     }
