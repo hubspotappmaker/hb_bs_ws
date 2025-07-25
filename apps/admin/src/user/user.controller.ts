@@ -38,4 +38,13 @@ export class UserController {
   ) {
     return this.userService.changeTier(id, tierID);
   }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Get("get-source")
+  async getSourceUser(
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.userService.getSourceUser(paginationDto);
+  }
 }

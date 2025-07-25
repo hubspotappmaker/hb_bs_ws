@@ -1,4 +1,4 @@
-import { User } from '@app/common';
+import { App, User } from '@app/common';
 import { PaginationDto } from '@app/common/interface/dto/common/pagination.dto';
 import { PaginationResponse } from '@app/common/interface/response/pagination.response';
 import { Tier } from '@app/common/schemas/tier.schema';
@@ -11,12 +11,14 @@ export class UserService {
     constructor(
         @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
         @InjectModel(Tier.name) private tierModel: SoftDeleteModel<Tier>,
+        @InjectModel(App.name) private appModel: SoftDeleteModel<App>,
     ) { }
 
     async getAllUser(paginationDto: PaginationDto) {
         const { page, limit } = paginationDto;
 
         const filter: Record<string, any> = {
+
         };
 
         const totalRecord = await this.userModel.countDocuments(filter);
@@ -26,6 +28,33 @@ export class UserService {
         const data = await this.userModel
             .find(filter)
             .populate('tier')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .exec();
+
+        return {
+            data,
+            page,
+            size: limit,
+            totalPage,
+            totalRecord,
+        };
+    }
+
+    async getSourceUser(paginationDto: PaginationDto) {
+        const { page, limit } = paginationDto;
+
+        const filter: Record<string, any> = {
+        };
+
+        const totalRecord = await this.appModel.countDocuments(filter);
+
+        const totalPage = Math.ceil(totalRecord / limit);
+
+        const data = await this.appModel
+            .find(filter)
+            .populate('user')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
