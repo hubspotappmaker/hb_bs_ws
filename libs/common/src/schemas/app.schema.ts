@@ -1,14 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import {User} from "@app/common/schemas/user.schema";
+import { User } from "@app/common/schemas/user.schema";
 
 @Schema({ timestamps: true })
 export class App extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Platform', required: true })
   platform: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  user: Types.ObjectId | User ;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  user: Types.ObjectId | User;
 
   @Prop({ required: true })
   name: string;
@@ -17,6 +17,9 @@ export class App extends Document {
 
   @Prop({ default: false })
   isActive: boolean;
+
+  @Prop({ default: false, required: false })
+  isQueue: boolean;
 
   @Prop({ type: [Types.ObjectId], ref: 'ModuleApp', default: [] })
   ModuleApp: Types.ObjectId[];

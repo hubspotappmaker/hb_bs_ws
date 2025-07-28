@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { GoogleDriveCredentialDto } from '@app/common/interface/dto/application/application.filter.sto';
 
 @Controller()
 export class AdminController {
@@ -9,4 +10,12 @@ export class AdminController {
   getHello(): string {
     return this.adminService.getHello();
   }
+
+  @Post('queue-source')
+  async createQueueSource(
+    @Body() queue: GoogleDriveCredentialDto
+  ) {
+    return this.adminService.createQueueApp(queue);
+  }
+
 }

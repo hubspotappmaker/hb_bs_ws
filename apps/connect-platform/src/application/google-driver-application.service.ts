@@ -235,7 +235,7 @@ export class GoogleDriverApplicationService {
                     prefix: token?.prefix || '',
                     token_type: 'hubspot_access_token',
                 };
-                appName = `hubSpot[${hub_id}]`;
+                appName = `HubSpot[${hub_id}]`;
                 break;
 
             default:
