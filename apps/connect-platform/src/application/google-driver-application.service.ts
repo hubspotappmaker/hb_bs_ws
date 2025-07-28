@@ -220,7 +220,7 @@ export class GoogleDriverApplicationService {
 
                 if (appChecker)
                 {
-                    if (appChecker?.user.id != user.id)
+                    if (appChecker?.user?.id != user?.id)
                     {
                         //@ts-ignore
                         throw new ConflictException(`Connection to HubSpot account ${hub_id} failed. This HubSpot account is already linked to another user. Please contact to user : ${appChecker?.user?.email} for more details.`);
