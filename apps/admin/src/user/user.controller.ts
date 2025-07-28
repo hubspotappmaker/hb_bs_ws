@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Roles } from 'apps/auth/src/decorator/role.decorator';
 import { Role } from '@app/common/interface/enum/user.enum';
@@ -46,5 +46,14 @@ export class UserController {
     @Query() paginationDto: PaginationDto,
   ) {
     return this.userService.getSourceUser(paginationDto);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Delete('delete-account/:id')
+  async deleteAccount(
+    @Param('id') id: string,
+  ) {
+    return this.userService.deleteAccount(id);
   }
 }

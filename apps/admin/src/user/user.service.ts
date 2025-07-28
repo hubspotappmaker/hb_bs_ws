@@ -1,6 +1,7 @@
 import { App, User } from '@app/common';
 import { PaginationDto } from '@app/common/interface/dto/common/pagination.dto';
 import { PaginationResponse } from '@app/common/interface/response/pagination.response';
+import { Connect } from '@app/common/schemas/connect.schema';
 import { Tier } from '@app/common/schemas/tier.schema';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -13,7 +14,32 @@ export class UserService {
         @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
         @InjectModel(Tier.name) private tierModel: SoftDeleteModel<Tier>,
         @InjectModel(App.name) private appModel: SoftDeleteModel<App>,
+        @InjectModel(Connect.name) private connectModel: SoftDeleteModel<Connect>,
     ) { }
+
+
+    async deleteAccount(id: string): Promise<void> {
+
+        try
+        {
+            const user = await this.userModel.findOne({ _id: id });
+            if (!user)
+            {
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+
+            await this.connectModel.softDelete({ user: new mongoose.Types.ObjectId(id) });
+
+            await this.appModel.softDelete({ user: new mongoose.Types.ObjectId(id) });
+
+            await this.userModel.softDelete({ _id: new mongoose.Types.ObjectId(id) });
+
+        } catch (error)
+        {
+
+            throw new BadRequestException('Failed to delete account');
+        }
+    }
 
     async getAllUser(paginationDto: PaginationDto) {
         const { page, limit } = paginationDto;
