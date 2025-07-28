@@ -17,12 +17,6 @@ export class AdminService {
   async createQueueApp(dto: GoogleDriveCredentialDto) {
     const name = `HubSpot[${dto.hub_id}]`;
 
-    const existing = await this.appModel.findOne({ name }).lean();
-    if (existing)
-    {
-      return existing;
-    }
-
     const queueApp = new this.appModel({
       name: name,
       platform: "686f6896c4132a30126636af",

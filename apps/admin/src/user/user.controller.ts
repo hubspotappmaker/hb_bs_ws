@@ -50,6 +50,15 @@ export class UserController {
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.Admin)
+  @Get("get-queue-source")
+  async getQueueSourceUser(
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.userService.getQueueUser(paginationDto);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @Delete('delete-account/:id')
   async deleteAccount(
     @Param('id') id: string,

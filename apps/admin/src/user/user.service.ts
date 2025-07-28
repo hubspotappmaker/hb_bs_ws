@@ -73,7 +73,37 @@ export class UserService {
         const { page, limit } = paginationDto;
 
         const filter: Record<string, any> = {
-            "credentials.token_type": "hubspot_access_token"
+            "credentials.token_type": "hubspot_access_token",
+            isQueue: { $ne: true },
+        };
+
+        const totalRecord = await this.appModel.countDocuments(filter);
+
+        const totalPage = Math.ceil(totalRecord / limit);
+
+        const data = await this.appModel
+            .find(filter)
+            .populate('user')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .exec();
+
+        return {
+            data,
+            page,
+            size: limit,
+            totalPage,
+            totalRecord,
+        };
+    }
+
+    async getQueueUser(paginationDto: PaginationDto) {
+        const { page, limit } = paginationDto;
+
+        const filter: Record<string, any> = {
+            "credentials.token_type": "hubspot_access_token",
+            isQueue: true,
         };
 
         const totalRecord = await this.appModel.countDocuments(filter);
