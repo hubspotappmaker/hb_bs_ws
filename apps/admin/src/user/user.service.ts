@@ -6,6 +6,7 @@ import { Tier } from '@app/common/schemas/tier.schema';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
 @Injectable()
@@ -91,6 +92,40 @@ export class UserService {
             if (!user)
             {
                 throw new NotFoundException(`User with id ${id} not found`);
+            }
+
+
+            return {
+                isExpired: user.isExpired,
+                expiredDate: user.expiredDate
+            }
+
+        } catch (error)
+        {
+
+            throw new BadRequestException('Failed check expired status');
+        }
+    }
+
+    async checkExpiredHubspot(hubId: string) {
+
+        try
+        {
+            const hubApp = await this.appModel.findOne({
+                'credentials.hub_id': hubId,
+                isDeleted: false,
+                platform: new Types.ObjectId("686f6896c4132a30126636af"),
+            });
+
+            if (!hubApp)
+            {
+                throw new NotFoundException(`App with id ${hubId} not found`);
+            }
+
+            const user = await this.userModel.findOne({ _id: hubApp.user });
+            if (!user)
+            {
+                throw new NotFoundException(`User with id ${hubApp.user} not found`);
             }
 
 

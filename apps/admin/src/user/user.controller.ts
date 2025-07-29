@@ -93,4 +93,11 @@ export class UserController {
   ) {
     return this.userService.checkExpired(id);
   }
+
+  @Get('check-expired-hubspot/:id')
+  async checkExpiredhubspot(
+    @Param('id') id: string,
+  ) {
+    return this.userService.checkExpiredHubspot(id);
+  }
 }
