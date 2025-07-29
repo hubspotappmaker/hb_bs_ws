@@ -58,7 +58,7 @@ export class UserService {
         } catch (error)
         {
 
-            throw new BadRequestException('Failed to delete account');
+            throw new BadRequestException('Failed change expired status');
         }
     }
 
@@ -79,7 +79,7 @@ export class UserService {
         } catch (error)
         {
 
-            throw new BadRequestException('Failed to delete account');
+            throw new BadRequestException('Failed set expired status');
         }
     }
 
@@ -99,7 +99,7 @@ export class UserService {
         } catch (error)
         {
 
-            throw new BadRequestException('Failed to delete account');
+            throw new BadRequestException('Failed check expired status');
         }
     }
 

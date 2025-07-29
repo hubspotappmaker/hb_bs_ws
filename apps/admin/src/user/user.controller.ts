@@ -73,7 +73,7 @@ export class UserController {
     @Param('id') id: string,
     @Param('status') status: boolean,
   ) {
-    return this.userService.deleteAccount(id);
+    return this.userService.changeExpiredStatus(id, status);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
