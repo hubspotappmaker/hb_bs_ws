@@ -94,7 +94,10 @@ export class UserService {
             }
 
 
-            return await user.isExpired;
+            return {
+                isExpired: user.isExpired,
+                expiredDate: user.expiredDate
+            }
 
         } catch (error)
         {
