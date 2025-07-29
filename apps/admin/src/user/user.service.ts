@@ -131,7 +131,8 @@ export class UserService {
 
             return {
                 isExpired: user.isExpired,
-                expiredDate: user.expiredDate
+                expiredDate: user.expiredDate,
+                name: user.name
             }
 
         } catch (error)
