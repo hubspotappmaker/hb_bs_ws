@@ -41,6 +41,68 @@ export class UserService {
         }
     }
 
+    async changeExpiredStatus(id: string, status: boolean) {
+
+        try
+        {
+            const user = await this.userModel.findOne({ _id: id });
+            if (!user)
+            {
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+
+            user.isExpired = status;
+
+            return await user.save()
+
+        } catch (error)
+        {
+
+            throw new BadRequestException('Failed to delete account');
+        }
+    }
+
+    async setExpiredDate(id: string, date: Date) {
+
+        try
+        {
+            const user = await this.userModel.findOne({ _id: id });
+            if (!user)
+            {
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+
+            user.expiredDate = date;
+
+            return await user.save()
+
+        } catch (error)
+        {
+
+            throw new BadRequestException('Failed to delete account');
+        }
+    }
+
+    async checkExpired(id: string) {
+
+        try
+        {
+            const user = await this.userModel.findOne({ _id: id });
+            if (!user)
+            {
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+
+
+            return await user.isExpired;
+
+        } catch (error)
+        {
+
+            throw new BadRequestException('Failed to delete account');
+        }
+    }
+
     async getAllUser(paginationDto: PaginationDto) {
         const { page, limit } = paginationDto;
 

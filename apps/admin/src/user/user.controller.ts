@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Roles } from 'apps/auth/src/decorator/role.decorator';
 import { Role } from '@app/common/interface/enum/user.enum';
@@ -64,5 +64,33 @@ export class UserController {
     @Param('id') id: string,
   ) {
     return this.userService.deleteAccount(id);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Patch('change-expired-status/:id/:status')
+  async changeExpiredStatus(
+    @Param('id') id: string,
+    @Param('status') status: boolean,
+  ) {
+    return this.userService.deleteAccount(id);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Post('set-expired-date/:id/:date')
+  async setExpiredDate(
+    @Param('id') id: string,
+    @Param('date') date: Date,
+  ) {
+    return this.userService.setExpiredDate(id, date);
+  }
+
+
+  @Get('check-expired/:id')
+  async checkExpired(
+    @Param('id') id: string,
+  ) {
+    return this.userService.checkExpired(id);
   }
 }

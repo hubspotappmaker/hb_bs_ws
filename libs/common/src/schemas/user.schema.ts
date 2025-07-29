@@ -28,6 +28,10 @@ export class User extends Document {
   @Prop() phone?: string;
   @Prop() address?: string;
 
+  @Prop({ required: false }) expiredDate?: Date;
+
+  @Prop({ required: false, default: false }) isExpired?: boolean;
+
   @Prop({ default: false })
   emailVerified: boolean;
 
