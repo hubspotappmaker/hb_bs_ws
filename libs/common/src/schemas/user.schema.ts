@@ -16,7 +16,7 @@ export class User extends Document {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'App' }], default: [] })
   connectedApps: Types.ObjectId[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Tier', required: false })
+  @Prop({ type: Types.ObjectId, ref: 'Tier', required: false, default: "6875c69a4542710d8819b760" })
   tier: Types.ObjectId;
 
   @Prop({ type: String, enum: Role, default: Role.User })
