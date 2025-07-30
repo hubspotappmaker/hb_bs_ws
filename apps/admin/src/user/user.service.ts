@@ -97,7 +97,9 @@ export class UserService {
 
             return {
                 isExpired: user.isExpired,
-                expiredDate: user.expiredDate
+                expiredDate: user.expiredDate,
+                name: user.name,
+                email: user.email
             }
 
         } catch (error)
@@ -132,7 +134,8 @@ export class UserService {
             return {
                 isExpired: user.isExpired,
                 expiredDate: user.expiredDate,
-                name: user.name
+                name: user.name,
+                email: user.email
             }
 
         } catch (error)
