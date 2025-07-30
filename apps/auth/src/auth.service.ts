@@ -5,33 +5,32 @@ import {
   UnauthorizedException,
   BadRequestException
 } from '@nestjs/common';
-import {InjectModel, Prop} from '@nestjs/mongoose';
+import { InjectModel, Prop } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import {App, Platform, User} from '@app/common';
+import { App, Platform, User } from '@app/common';
 import { SignInDto, SignUpDto } from '@app/common/interface/dto/common/auth.dto';
 import { JwtService } from '@nestjs/jwt';
-import {firstValueFrom} from "rxjs";
-import {HttpService} from "@nestjs/axios";
-import {SoftDeleteModel} from "soft-delete-plugin-mongoose";
-import {GoogleLoginDto} from "./dto/auth.dto";
+import { firstValueFrom } from "rxjs";
+import { HttpService } from "@nestjs/axios";
+import { SoftDeleteModel } from "soft-delete-plugin-mongoose";
+import { GoogleLoginDto } from "./dto/auth.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
-      private readonly httpService: HttpService,
-      @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
-      @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
-      @InjectModel(Platform.name) private readonly platformModel: SoftDeleteModel<Platform>,
-      private jwtService: JwtService
+    private readonly httpService: HttpService,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<User>,
+    @InjectModel(App.name) private readonly appModel: SoftDeleteModel<App>,
+    @InjectModel(Platform.name) private readonly platformModel: SoftDeleteModel<Platform>,
+    private jwtService: JwtService
   ) { }
 
   async signUp(signUpDto: SignUpDto) {
     const { name, email, password } = signUpDto;
 
     const exists = await this.userModel.findOne({ email }).exec();
-    if (exists)
-    {
+    if (exists) {
       throw new ConflictException(`Email "${email}" is already in use`);
     }
 
@@ -45,13 +44,38 @@ export class AuthService {
     });
     const user = await created.save();
 
+    const wpPayload = {
+      email,
+      first_name: name,
+      password,
+    };
+
+    try {
+      const wpResponse$ = this.httpService.post(
+        'https://nexce.io/wp-json/wc/v3/customers',
+        wpPayload,
+        {
+          auth: {
+            username: 'ck_65bdba1782446e8c54c35862d16b643e0d8ecbb3',
+            password: 'cs_bd6cb3f0ddcad57d6750aaad9fc99ff68994e62e',
+          },
+        },
+      );
+      await firstValueFrom(wpResponse$);
+    } catch (error) {
+      await this.userModel.deleteOne({ _id: user._id }).exec();
+      throw new BadRequestException(
+        'Failed to create WooCommerce customer: ' +
+        (error.message || 'Unknown error'),
+      );
+    }
+
     const result = user.toObject();
     return result;
   }
 
   async getUserById(id: string) {
-    if (!Types.ObjectId.isValid(id))
-    {
+    if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
@@ -60,8 +84,7 @@ export class AuthService {
       .select('-password')
       .exec();
 
-    if (!user)
-    {
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
@@ -82,8 +105,7 @@ export class AuthService {
   async signIn(signInDto: SignInDto) {
     const isValidUser = await this.validateUser(signInDto.email, signInDto.password);
 
-    if (isValidUser)
-    {
+    if (isValidUser) {
       const payload = {
         sub: isValidUser.id,
         email: isValidUser.email,
@@ -105,9 +127,9 @@ export class AuthService {
 
     try {
       const res = await firstValueFrom(
-          this.httpService.get(url, {
-            headers: { Authorization: `Bearer ${access_token}` },
-          }),
+        this.httpService.get(url, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        }),
       );
 
 
@@ -118,11 +140,11 @@ export class AuthService {
     }
   }
 
-  async googleLogin( googleLoginDto: GoogleLoginDto) {
+  async googleLogin(googleLoginDto: GoogleLoginDto) {
     const userInfo = await this.fetchGoogleUserInfo({
       access_token: googleLoginDto?.access_token
     });
-    console.log(userInfo,"bat dong bo cmnr")
+    console.log(userInfo, "bat dong bo cmnr")
 
     let user = await this.userModel.findOne({ email: userInfo?.email });
     if (!user) {
