@@ -95,8 +95,22 @@ export class AuthService {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const isMatch = await bcrypt.compare(plainPassword, user.password);
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+    // const isMatch = await bcrypt.compare(plainPassword, user.password);
+    // if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+    const response = await fetch("https://nexce.io/wp-json/jwt-auth/v1/token", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: email, password: plainPassword }),
+    });
+
+    const status = await response.status;
+    console.log("WordPress login response:", status);
+
+    if (status !== 200) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
 
     const result = user;
     return result;
