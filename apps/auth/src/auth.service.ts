@@ -29,7 +29,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     const { name, email, password } = signUpDto;
 
-    const exists = await this.userModel.findOne({ email }).exec();
+    const exists = await this.userModel.findOne({ email: email, isDeleted: false }).exec();
     if (exists) {
       throw new ConflictException(`Email "${email}" is already in use`);
     }
@@ -64,10 +64,6 @@ export class AuthService {
       await firstValueFrom(wpResponse$);
     } catch (error) {
       await this.userModel.deleteOne({ _id: user._id }).exec();
-      throw new BadRequestException(
-        'Failed to create WooCommerce customer: ' +
-        (error.message || 'Unknown error'),
-      );
     }
 
     const result = user.toObject();
@@ -92,7 +88,8 @@ export class AuthService {
   }
 
   async validateUser(email: string, plainPassword: string) {
-    const user = await this.userModel.findOne({ email }).exec();
+    const user = await this.userModel.findOne({ email: email, isDeleted: false }).exec();
+    console.log("user: ", user);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     // const isMatch = await bcrypt.compare(plainPassword, user.password);
